@@ -33,3 +33,6 @@
 - The sample page also includes a modal day-editor prototype triggered per row to preview editing UI; the modal is front-end only and does not persist changes.
 - Header state reflects check-in status: when checked in, `header h1` shows the check-in time and the action button says `Check out`; when not checked in, `header h1` shows `Timestamp` and the action button shows current time.
 - Footer includes a tiny grey version stamp rendered as `yyyy-mm-dd-HH-MM`, sourced from `timestamp.php` file last-modified time.
+- Browser branding includes a custom `favicon.ico` reflecting work timekeeping (clock + briefcase motif) and is referenced from `timestamp.php`.
+- Additional app icon assets are provided for broader device support: `favicon-32x32.png` and `apple-touch-icon.png`.
+- Web app metadata is provided via `site.webmanifest` with Android icon assets (`android-chrome-192x192.png`, `android-chrome-512x512.png`) and `theme-color` wiring in `timestamp.php`.

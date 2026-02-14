@@ -393,7 +393,12 @@ $weeks = loadWeeks($db, $now);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1d7a0a" />
     <title>Timestamp Tracker</title>
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180" />
     <style>
       :root {
         font-family: "Source Sans Pro", system-ui, -apple-system, BlinkMacSystemFont,

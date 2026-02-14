@@ -5,4 +5,4 @@
 - Use `docs/requests.md` to capture any new specifications mentioned during chat and keep `docs/architecture.md` in sync with decisions.
 
 ## Prompt log
-- 2026-02-14 – consolidated status: completed docs cleanup by splitting and compressing request history, implemented `tests/regression.sh` for toggle/save-day/parsing/break/hint checks, validated the script successfully, and closed the last open backlog item so `docs/todo.md` currently has no open tasks.
+- 2026-02-14 – consolidated status: finalized icon and app-branding updates by regenerating sharp work-timekeeping assets (`favicon.ico`, `favicon-32x32.png`, `apple-touch-icon.png`, Android icons), adding `site.webmanifest` plus head wiring (`manifest`, `theme-color`, icon links) in `timestamp.php`, and synchronizing architecture/request documentation.
