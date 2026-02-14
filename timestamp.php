@@ -361,7 +361,24 @@ function loadWeeks(SQLite3 $db, DateTimeImmutable $now): array
                 'break' => formatHoursFromMinutes($day['break_minutes']),
             ];
         }
+
+        $missingDays = [];
+        $weekStart = new DateTimeImmutable($week['week_start']);
+        for ($offset = 0; $offset < 7; $offset++) {
+            $candidate = $weekStart->modify('+' . $offset . ' days');
+            $candidateKey = $candidate->format('Y-m-d');
+            if (isset($week['days'][$candidateKey])) {
+                continue;
+            }
+
+            $missingDays[] = [
+                'date' => $candidateKey,
+                'weekday' => $candidate->format('l'),
+            ];
+        }
+
         $week['days'] = $days;
+        $week['missing_days'] = $missingDays;
         unset($week['week_start']);
     }
     unset($week);
@@ -538,6 +555,41 @@ $weeks = loadWeeks($db, $now);
         white-space: nowrap;
       }
 
+      .missing-days {
+        margin-top: 0.55rem;
+        padding-top: 0.5rem;
+        border-top: 1px dashed rgba(18, 28, 56, 0.16);
+      }
+
+      .missing-days-label {
+        display: block;
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: #5c6575;
+        margin-bottom: 0.35rem;
+      }
+
+      .missing-days-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+
+      .missing-day-btn {
+        border: 1px solid rgba(29, 122, 10, 0.4);
+        border-radius: 999px;
+        background: #eff8ef;
+        color: #1f2c45;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.24rem 0.56rem;
+      }
+
+      .missing-day-btn:focus-visible {
+        outline: 2px solid #1d7a0a;
+        outline-offset: 1px;
+      }
+
       .editor-overlay {
         position: fixed;
         inset: 0;
@@ -690,7 +742,8 @@ $weeks = loadWeeks($db, $now);
                 $week['days'],
                 static fn(array $day): bool => count($day['pairs']) > 0
             ));
-            if (count($visibleDays) === 0) {
+            $missingDays = $week['missing_days'] ?? [];
+            if (count($visibleDays) === 0 && count($missingDays) === 0) {
                 continue;
             }
           ?>
@@ -725,6 +778,25 @@ $weeks = loadWeeks($db, $now);
                 </span>
               </div>
             <?php endforeach; ?>
+
+            <?php if (count($missingDays) > 0): ?>
+              <div class="missing-days" aria-label="Weekdays without entries">
+                <span class="missing-days-label">Add entries for:</span>
+                <div class="missing-days-list">
+                  <?php foreach ($missingDays as $missingDay): ?>
+                    <button
+                      type="button"
+                      class="missing-day-btn"
+                      data-day="<?= htmlspecialchars($missingDay['weekday'], ENT_QUOTES, 'UTF-8') ?>"
+                      data-date="<?= htmlspecialchars($missingDay['date'], ENT_QUOTES, 'UTF-8') ?>"
+                      aria-label="Add entries for <?= htmlspecialchars($missingDay['weekday'], ENT_QUOTES, 'UTF-8') ?>"
+                    >
+                      <?= htmlspecialchars($missingDay['weekday'], ENT_QUOTES, 'UTF-8') ?>
+                    </button>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php endif; ?>
           </section>
         <?php endforeach; ?>
       </main>
@@ -935,6 +1007,12 @@ $weeks = loadWeeks($db, $now);
             event.preventDefault();
             openModal(row);
           }
+        });
+      });
+
+      document.querySelectorAll(".missing-day-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          openModal(button);
         });
       });
 

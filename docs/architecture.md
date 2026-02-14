@@ -22,7 +22,8 @@
 - Modal editor now shows a conditional informational hint when any valid row overlaps `11:30`–`12:00`, while clarifying that break still counts only if the full window is covered.
 - Day-row click/tap is the canonical edit entrypoint for modal editing; no separate edit button is required.
 - Backend safety handling enforces a single open check-in row: if multiple open rows are detected, the newest remains open and older ones are auto-closed.
-- A lightweight regression script exists at `tests/regression.sh` and verifies toggle behavior, save-day persistence/deletion, compact time parsing, break-rule semantics, and overlap-hint source logic.
+- A lightweight regression script exists at `tests/regression.sh` and verifies toggle behavior, save-day persistence/deletion, compact time parsing, break-rule semantics, overlap-hint source logic, and missing-weekday add-flow wiring.
+- Each displayed week now also carries a bottom list of missing weekdays (no entries), and those items use the same modal add/edit entrypoint as existing day rows.
 
 ## Front-end intent
 - Mobile presentation is tuned for 1080×2340 screens with DPR 3: a sticky header for the “check-in/check-out” button and stacked week cards are delivered via simple HTML/CSS (see `examples/mobile.html`).

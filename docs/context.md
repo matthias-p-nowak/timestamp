@@ -5,4 +5,4 @@
 - Use `docs/requests.md` to capture any new specifications mentioned during chat and keep `docs/architecture.md` in sync with decisions.
 
 ## Prompt log
-- 2026-02-14 – consolidated status: completed Android-access workflow improvements by binding the VS Code PHP task to `0.0.0.0:8000` and adding `show-lan-url` helper output, while keeping request/context documentation synchronized.
+- 2026-02-14 – consolidated status: finalized manifest launch settings (`start_url`, `scope`) and completed missing-weekday feature delivery end-to-end: promoted the new specs to canonical design, implemented bottom-of-week missing-day add buttons in `timestamp.php` using the existing modal flow, expanded regression coverage to include this wiring, and synchronized architecture/request logs.

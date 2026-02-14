@@ -16,6 +16,8 @@ This application records check-in and check-out timestamps at work and calculate
 - Weeks are displayed with the current week on top.
 - At most 8 weeks are displayed.
 - Days without time events are not shown in the daily list.
+- At the bottom of each displayed week section, show weekdays that currently have no time entries.
+- Each missing-weekday item is clickable/tappable and opens the same add/edit flow so time entries can be created for that day.
 - Day editing is triggered by tapping/clicking the day row itself.
 - When the user is checked in:
   - `header h1` shows the check-in timestamp.

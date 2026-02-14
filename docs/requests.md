@@ -17,3 +17,7 @@
 - 2026-02-14 – Regenerated icon assets to improve sharpness and added full web app assets: `site.webmanifest`, `android-chrome-192x192.png`, `android-chrome-512x512.png`, plus manifest/theme-color wiring in `timestamp.php`.
 - 2026-02-14 – Updated `.vscode/tasks.json` PHP server task to bind `0.0.0.0:8000` so Android devices on the same LAN can connect.
 - 2026-02-14 – Added `.vscode/tasks.json` helper task `show-lan-url` to print the current LAN URL for quick Android access testing.
+- 2026-02-14 – Updated `site.webmanifest` `start_url` to `./timestamp.php` so home-screen launches resolve directly to the app entrypoint.
+- 2026-02-14 – Added explicit `scope` (`./`) in `site.webmanifest` to keep installed app navigation behavior predictable within the project root.
+- 2026-02-14 – Accepted and promoted new specs: each displayed week shows a bottom list of missing weekdays (no entries), and each missing weekday opens the same add/edit flow for entry creation.
+- 2026-02-14 – Implemented missing-weekday add flow in `timestamp.php`: each week card now renders bottom clickable missing-day items that open the existing modal add/edit workflow.
