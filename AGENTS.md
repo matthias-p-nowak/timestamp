@@ -41,6 +41,8 @@ name | purpose
     - make a git commit describing the snapshot and baseline status.
 - "new specs" means the following
     - review and normalize items under `docs/design.md` -> `## New specs (draft)`.
+    - identify and resolve ambiguous requirements with the user before promotion.
+    - do not promote draft items until acceptance criteria are explicit and decision-ready.
     - move accepted items into the canonical sections in `docs/design.md` and remove them from draft.
     - keep `docs/architecture.md` aligned with the resulting design rules.
     - record the newly accepted requirements in `docs/requests.md`.

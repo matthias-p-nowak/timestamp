@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Timestamp Tracker: Calendar Example</title>
+    <style>
+      :root {
+        font-family: "Source Sans Pro", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        color: #111;
+        background: #f4f4f6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        background: linear-gradient(180deg, #f4f4f6 0%, #e9edef 100%);
+      }
+
+      .panel {
+        width: min(440px, 100%);
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid rgba(18, 28, 56, 0.08);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        padding: 1rem;
+      }
+
+      h1 {
+        margin: 0 0 0.35rem;
+        font-size: 1.1rem;
+        color: #1f2c45;
+      }
+
+      .subtitle {
+        margin: 0 0 0.9rem;
+        color: #5c6575;
+        font-size: 0.86rem;
+      }
+
+      .picker-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.55rem;
+        align-items: center;
+      }
+
+      input[type="date"] {
+        width: 100%;
+        border: 1px solid #d4dce8;
+        border-radius: 9px;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.92rem;
+        color: #1f2c45;
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        border: 0;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+
+      .btn {
+        border: none;
+        border-radius: 999px;
+        background: #1f8a0a;
+        color: #fff;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.5rem 0.9rem;
+      }
+
+      .result {
+        margin-top: 0.85rem;
+        padding: 0.55rem 0.65rem;
+        border-radius: 10px;
+        background: #f4f8ff;
+        border: 1px solid rgba(18, 28, 56, 0.08);
+        color: #2b3b56;
+        font-size: 0.86rem;
+        min-height: 2.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="panel">
+      <h1>Calendar Picker Example</h1>
+      <p class="subtitle">Simple date picker prototype for the timestamp app (`yyyy-mm-dd`).</p>
+
+      <div class="picker-row">
+        <input id="dateInput" class="visually-hidden" type="date" />
+        <button class="btn" id="openPickerBtn" type="button">Pick date</button>
+        <button class="btn" id="todayBtn" type="button">Today</button>
+      </div>
+
+      <div class="result" id="resultText">No date selected.</div>
+    </main>
+
+    <script>
+      const dateInput = document.getElementById("dateInput");
+      const openPickerBtn = document.getElementById("openPickerBtn");
+      const todayBtn = document.getElementById("todayBtn");
+      const resultText = document.getElementById("resultText");
+
+      function setResult(dateValue) {
+        if (!dateValue) {
+          resultText.textContent = "No date selected.";
+          openPickerBtn.textContent = "Pick date";
+          return;
+        }
+
+        resultText.textContent = `Selected date: ${dateValue}`;
+        openPickerBtn.textContent = dateValue;
+      }
+
+      dateInput.addEventListener("change", () => {
+        setResult(dateInput.value);
+      });
+
+      openPickerBtn.addEventListener("click", () => {
+        if (typeof dateInput.showPicker === "function") {
+          dateInput.showPicker();
+          return;
+        }
+        dateInput.click();
+      });
+
+      todayBtn.addEventListener("click", () => {
+        const now = new Date();
+        const yyyy = String(now.getFullYear());
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        dateInput.value = `${yyyy}-${mm}-${dd}`;
+        setResult(dateInput.value);
+      });
+    </script>
+  </body>
+</html>

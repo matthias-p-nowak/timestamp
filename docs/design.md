@@ -7,6 +7,9 @@ This application records check-in and check-out timestamps at work and calculate
 - Authentication is handled via `.htaccess`.
 - This is a single-user application.
 - Backend is implemented in `timestamp.php` with `timestamp.db` (SQLite3) as data storage.
+- European formats rule
+  - weeks start on monday
+  - date format displayed should be yyyy-mm-dd
 
 ## UX behavior
 - The app is mainly used from a mobile device with 1080 × 2340 and DPR 3.
@@ -18,6 +21,10 @@ This application records check-in and check-out timestamps at work and calculate
 - Days without time events are not shown in the daily list.
 - At the bottom of each displayed week section, show weekdays that currently have no time entries.
 - Each missing-weekday item is clickable/tappable and opens the same add/edit flow so time entries can be created for that day.
+- Above the version note at the bottom of the page, show a small calendar/date button.
+- Clicking the calendar/date button opens a date picker.
+- The date picker allows selection only within the last 8 weeks.
+- After selecting a date, open the same add/edit modal flow used for day rows so time entries can be created for that selected day.
 - Day editing is triggered by tapping/clicking the day row itself.
 - When the user is checked in:
   - `header h1` shows the check-in timestamp.
@@ -63,3 +70,10 @@ This application records check-in and check-out timestamps at work and calculate
 ## New specs (draft)
 - Add new candidate specifications here first.
 - After review/acceptance, move each item into the canonical section above and remove it from this draft list.
+- Ambiguity checklist (fill before promotion):
+  - user intent and scope are explicit (what changes, where, and for whom)
+  - interaction trigger and expected result are concrete
+  - data/format rules and edge cases are defined
+  - acceptance criteria are testable
+  - unresolved ambiguities have been clarified with the user
+

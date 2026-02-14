@@ -238,6 +238,33 @@
         letter-spacing: 0.03em;
       }
 
+      .add-date-row {
+        margin: 0.35rem 1rem 0;
+        display: flex;
+        justify-content: center;
+      }
+
+      .calendar-add-btn {
+        border: 1px solid rgba(29, 122, 10, 0.45);
+        border-radius: 999px;
+        background: #eff8ef;
+        color: #1f2c45;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.35rem 0.8rem;
+      }
+
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        border: 0;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+      }
+
       .pill {
         display: inline-flex;
         align-items: center;
@@ -395,6 +422,10 @@
           </div>
         </div>
       </main>
+      <div class="add-date-row">
+        <input id="calendarDateInput" class="visually-hidden" type="date" />
+        <button type="button" class="calendar-add-btn" id="calendarAddBtn" aria-label="Add entries by date">📅 Add day</button>
+      </div>
       <footer class="version-stamp" aria-label="Version stamp">2026-02-14-11-55</footer>
     </div>
     <div class="editor-overlay" id="dayEditor" aria-hidden="true">
@@ -414,6 +445,10 @@
       const pairGrid = document.getElementById("pairGrid");
       const addPairBtn = document.getElementById("addPairBtn");
       const closeButtons = [document.getElementById("editorCancel"), document.getElementById("editorSave")];
+      const calendarDateInput = document.getElementById("calendarDateInput");
+      const calendarAddBtn = document.getElementById("calendarAddBtn");
+      const useNativeTimeInput = typeof window.matchMedia === "function" &&
+        window.matchMedia("(pointer: coarse)").matches;
 
       function addPairInputRow(inValue, outValue) {
         const row = document.createElement("div");
@@ -421,14 +456,24 @@
 
         const inInput = document.createElement("input");
         inInput.className = "pair-input";
-        inInput.type = "text";
-        inInput.placeholder = "Check in";
+        if (useNativeTimeInput) {
+          inInput.type = "time";
+          inInput.step = "60";
+        } else {
+          inInput.type = "text";
+          inInput.placeholder = "Check in";
+        }
         inInput.value = inValue || "";
 
         const outInput = document.createElement("input");
         outInput.className = "pair-input";
-        outInput.type = "text";
-        outInput.placeholder = "Check out";
+        if (useNativeTimeInput) {
+          outInput.type = "time";
+          outInput.step = "60";
+        } else {
+          outInput.type = "text";
+          outInput.placeholder = "Check out";
+        }
         outInput.value = outValue || "";
 
         row.appendChild(inInput);
@@ -459,6 +504,33 @@
         overlay.setAttribute("aria-hidden", "false");
       }
 
+      function openModalForDate(dateValue) {
+        pairGrid.innerHTML = "";
+        addPairInputRow("", "");
+        overlay.classList.add("is-open");
+        overlay.setAttribute("aria-hidden", "false");
+        overlay.dataset.selectedDate = dateValue;
+      }
+
+      function setDatePickerRangeToLast8Weeks() {
+        const now = new Date();
+        const day = now.getDay();
+        const mondayOffset = (day + 6) % 7;
+        const thisMonday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - mondayOffset);
+        const minDate = new Date(thisMonday);
+        minDate.setDate(minDate.getDate() - (7 * 7));
+
+        const toIsoDate = (value) => {
+          const yyyy = String(value.getFullYear());
+          const mm = String(value.getMonth() + 1).padStart(2, "0");
+          const dd = String(value.getDate()).padStart(2, "0");
+          return `${yyyy}-${mm}-${dd}`;
+        };
+
+        calendarDateInput.min = toIsoDate(minDate);
+        calendarDateInput.max = toIsoDate(now);
+      }
+
       function closeModal() {
         overlay.classList.remove("is-open");
         overlay.setAttribute("aria-hidden", "true");
@@ -485,11 +557,28 @@
         addPairInputRow("", "");
       });
 
+      calendarAddBtn.addEventListener("click", () => {
+        if (typeof calendarDateInput.showPicker === "function") {
+          calendarDateInput.showPicker();
+          return;
+        }
+        calendarDateInput.click();
+      });
+
+      calendarDateInput.addEventListener("change", () => {
+        if (!calendarDateInput.value) {
+          return;
+        }
+        openModalForDate(calendarDateInput.value);
+      });
+
       overlay.addEventListener("click", (event) => {
         if (event.target === overlay) {
           closeModal();
         }
       });
+
+      setDatePickerRangeToLast8Weeks();
     </script>
   </body>
 </html>

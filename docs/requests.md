@@ -21,3 +21,9 @@
 - 2026-02-14 – Added explicit `scope` (`./`) in `site.webmanifest` to keep installed app navigation behavior predictable within the project root.
 - 2026-02-14 – Accepted and promoted new specs: each displayed week shows a bottom list of missing weekdays (no entries), and each missing weekday opens the same add/edit flow for entry creation.
 - 2026-02-14 – Implemented missing-weekday add flow in `timestamp.php`: each week card now renders bottom clickable missing-day items that open the existing modal add/edit workflow.
+- 2026-02-14 – Implemented `examples/calendar.html` example page with a functional date picker and simple selected-date preview behavior.
+- 2026-02-14 – Updated `examples/calendar.html` date display behavior to use `yyyy-mm-dd` format, aligned with `docs/design.md` European formats rule.
+- 2026-02-14 – Updated `examples/calendar.html` so the native date input is hidden and a visible button opens the date picker.
+- 2026-02-14 – Strengthened `new specs` workflow: added explicit ambiguity-resolution requirements in `AGENTS.md` and added a pre-promotion ambiguity checklist template in `docs/design.md`.
+- 2026-02-14 – Accepted and promoted calendar-button spec: add a bottom calendar/date button above version note, open date picker limited to last 8 weeks, and route selected dates into the existing day-row modal add/edit flow.
+- 2026-02-14 – Implemented the calendar-button flow in `examples/mobile.html`: bottom add-day button, hidden date picker input constrained to last 8 weeks, and selected-date handoff into the existing modal.

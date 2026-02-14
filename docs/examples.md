@@ -11,3 +11,6 @@
 
 ## `examples/snapshots/`
 - contains dated snapshot files of approved `mobile.html` versions.
+
+## `examples/calendar.html`
+- contains a html page with a date picker

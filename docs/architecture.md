@@ -21,9 +21,12 @@
 - Client-side modal validation now runs before submit: invalid rows are highlighted, first validation error is shown inline, and save is blocked until all rows are valid.
 - Modal editor now shows a conditional informational hint when any valid row overlaps `11:30`–`12:00`, while clarifying that break still counts only if the full window is covered.
 - Day-row click/tap is the canonical edit entrypoint for modal editing; no separate edit button is required.
+- Day-editor pair inputs use native `type=time` controls on coarse-pointer/mobile devices (`step=60`) to surface numeric time keyboards; desktop keeps text inputs for compact entries.
 - Backend safety handling enforces a single open check-in row: if multiple open rows are detected, the newest remains open and older ones are auto-closed.
 - A lightweight regression script exists at `tests/regression.sh` and verifies toggle behavior, save-day persistence/deletion, compact time parsing, break-rule semantics, overlap-hint source logic, and missing-weekday add-flow wiring.
 - Each displayed week now also carries a bottom list of missing weekdays (no entries), and those items use the same modal add/edit entrypoint as existing day rows.
+- A bottom calendar/date button opens a date picker constrained to the last 8 weeks; selected dates enter the same modal add/edit flow used by day rows.
+- Save-day backend handling now enforces the same edit window and rejects out-of-range dates (for example future dates), matching the picker constraint.
 
 ## Front-end intent
 - Mobile presentation is tuned for 1080×2340 screens with DPR 3: a sticky header for the “check-in/check-out” button and stacked week cards are delivered via simple HTML/CSS (see `examples/mobile.html`).
@@ -36,4 +39,4 @@
 - Footer includes a tiny grey version stamp rendered as `yyyy-mm-dd-HH-MM`, sourced from `timestamp.php` file last-modified time.
 - Browser branding includes a custom `favicon.ico` reflecting work timekeeping (clock + briefcase motif) and is referenced from `timestamp.php`.
 - Additional app icon assets are provided for broader device support: `favicon-32x32.png` and `apple-touch-icon.png`.
-- Web app metadata is provided via `site.webmanifest` with Android icon assets (`android-chrome-192x192.png`, `android-chrome-512x512.png`) and `theme-color` wiring in `timestamp.php`.
+- Web app metadata is provided via `manifest.json` with Android icon assets (`android-chrome-192x192.png`, `android-chrome-512x512.png`) plus dedicated opaque maskable assets (`android-chrome-192x192-maskable.png`, `android-chrome-512x512-maskable.png`) and `theme-color` wiring in `timestamp.php`.

@@ -191,11 +191,32 @@ function handleToggleAction(SQLite3 $db, DateTimeImmutable $now): void
     exit;
 }
 
-function handleSaveDayAction(SQLite3 $db): void
+function isDateWithinEditWindow(DateTimeImmutable $now, string $date): bool
+{
+    $candidate = DateTimeImmutable::createFromFormat('Y-m-d', $date);
+    if ($candidate === false || $candidate->format('Y-m-d') !== $date) {
+        return false;
+    }
+
+    $windowStart = $now
+        ->modify('monday this week')
+        ->setTime(0, 0, 0)
+        ->modify('-' . (WEEKS_WINDOW - 1) . ' weeks');
+    $windowEnd = $now->setTime(0, 0, 0);
+    $candidateDay = $candidate->setTime(0, 0, 0);
+
+    return $candidateDay >= $windowStart && $candidateDay <= $windowEnd;
+}
+
+function handleSaveDayAction(SQLite3 $db, DateTimeImmutable $now): void
 {
     $date = isset($_POST['day_date']) ? trim((string) $_POST['day_date']) : '';
     $normalizedDate = normalizeDate($date);
     if ($normalizedDate === null) {
+        header('Location: ' . strtok($_SERVER['REQUEST_URI'] ?? '/', '?'));
+        exit;
+    }
+    if (!isDateWithinEditWindow($now, $normalizedDate)) {
         header('Location: ' . strtok($_SERVER['REQUEST_URI'] ?? '/', '?'));
         exit;
     }
@@ -275,7 +296,7 @@ function handlePostActions(SQLite3 $db, DateTimeImmutable $now): void
         handleToggleAction($db, $now);
     }
     if ($action === 'save-day') {
-        handleSaveDayAction($db);
+        handleSaveDayAction($db, $now);
     }
 }
 
@@ -402,6 +423,13 @@ $actionLabel = $isCheckedIn ? 'Check out' : $now->format('H:i');
 $versionTimestamp = (new DateTimeImmutable('@' . (string) filemtime(__FILE__)))
     ->setTimezone(new DateTimeZone('Europe/Oslo'))
     ->format('Y-m-d-H-i');
+$manifestVersion = (string) filemtime(__DIR__ . '/manifest.json');
+$editWindowStartDate = $now
+    ->modify('monday this week')
+    ->setTime(0, 0, 0)
+    ->modify('-' . (WEEKS_WINDOW - 1) . ' weeks')
+    ->format('Y-m-d');
+$editWindowEndDate = $now->format('Y-m-d');
 $weeks = loadWeeks($db, $now);
 
 ?>
@@ -412,7 +440,7 @@ $weeks = loadWeeks($db, $now);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1d7a0a" />
     <title>Timestamp Tracker</title>
-    <link rel="manifest" href="site.webmanifest" />
+    <link rel="manifest" href="manifest.json?v=<?= htmlspecialchars($manifestVersion, ENT_QUOTES, 'UTF-8') ?>" />
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180" />
@@ -557,8 +585,6 @@ $weeks = loadWeeks($db, $now);
 
       .missing-days {
         margin-top: 0.55rem;
-        padding-top: 0.5rem;
-        border-top: 1px dashed rgba(18, 28, 56, 0.16);
       }
 
       .missing-days-label {
@@ -713,6 +739,22 @@ $weeks = loadWeeks($db, $now);
         letter-spacing: 0.03em;
       }
 
+      .footer-tools {
+        margin-top: 0.3rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .calendar-add-btn {
+        border: 1px solid rgba(29, 122, 10, 0.35);
+        border-radius: 999px;
+        background: #eff8ef;
+        color: #1f2c45;
+        padding: 0.28rem 0.72rem;
+        font-size: 0.74rem;
+        font-weight: 600;
+      }
+
       .visually-hidden {
         position: absolute;
         width: 1px;
@@ -781,7 +823,6 @@ $weeks = loadWeeks($db, $now);
 
             <?php if (count($missingDays) > 0): ?>
               <div class="missing-days" aria-label="Weekdays without entries">
-                <span class="missing-days-label">Add entries for:</span>
                 <div class="missing-days-list">
                   <?php foreach ($missingDays as $missingDay): ?>
                     <button
@@ -800,6 +841,19 @@ $weeks = loadWeeks($db, $now);
           </section>
         <?php endforeach; ?>
       </main>
+      <div class="footer-tools">
+        <input
+          type="date"
+          id="calendarDateInput"
+          class="visually-hidden"
+          min="<?= htmlspecialchars($editWindowStartDate, ENT_QUOTES, 'UTF-8') ?>"
+          max="<?= htmlspecialchars($editWindowEndDate, ENT_QUOTES, 'UTF-8') ?>"
+          aria-label="Select date"
+        />
+        <button type="button" id="calendarAddBtn" class="calendar-add-btn" aria-label="Add entries for date">
+          📅 add entries for other days
+        </button>
+      </div>
       <footer class="version-stamp" aria-label="Version stamp">
         <?= htmlspecialchars($versionTimestamp, ENT_QUOTES, 'UTF-8') ?>
       </footer>
@@ -835,6 +889,10 @@ $weeks = loadWeeks($db, $now);
       const editorForm = overlay.querySelector("form");
       const editorErrors = document.getElementById("editorErrors");
       const breakHint = document.getElementById("breakHint");
+      const calendarDateInput = document.getElementById("calendarDateInput");
+      const calendarAddBtn = document.getElementById("calendarAddBtn");
+      const useNativeTimeInput = typeof window.matchMedia === "function" &&
+        window.matchMedia("(pointer: coarse)").matches;
       const BREAK_START_MINUTES = (11 * 60) + 30;
       const BREAK_END_MINUTES = 12 * 60;
 
@@ -874,15 +932,25 @@ $weeks = loadWeeks($db, $now);
 
         const inInput = document.createElement("input");
         inInput.className = "pair-input";
-        inInput.type = "text";
-        inInput.placeholder = "Check in";
+        if (useNativeTimeInput) {
+          inInput.type = "time";
+          inInput.step = "60";
+        } else {
+          inInput.type = "text";
+          inInput.placeholder = "Check in";
+        }
         inInput.name = "pair_in[]";
         inInput.value = inValue || "";
 
         const outInput = document.createElement("input");
         outInput.className = "pair-input";
-        outInput.type = "text";
-        outInput.placeholder = "Check out";
+        if (useNativeTimeInput) {
+          outInput.type = "time";
+          outInput.step = "60";
+        } else {
+          outInput.type = "text";
+          outInput.placeholder = "Check out";
+        }
         outInput.name = "pair_out[]";
         outInput.value = outValue || "";
 
@@ -992,6 +1060,42 @@ $weeks = loadWeeks($db, $now);
         validateEditorRows();
       }
 
+      function openModalForDate(dateValue) {
+        pairGrid.innerHTML = "";
+        addPairInputRow("", "");
+        dayDateInput.value = dateValue;
+        overlay.classList.add("is-open");
+        overlay.setAttribute("aria-hidden", "false");
+        validateEditorRows();
+      }
+
+      function setDatePickerRangeToLast8Weeks() {
+        if (!calendarDateInput) {
+          return;
+        }
+        if (calendarDateInput.min && calendarDateInput.max) {
+          return;
+        }
+
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const weekDay = (maxDate.getDay() + 6) % 7;
+        const mondayThisWeek = new Date(maxDate);
+        mondayThisWeek.setDate(maxDate.getDate() - weekDay);
+        const minDate = new Date(mondayThisWeek);
+        minDate.setDate(mondayThisWeek.getDate() - ((8 - 1) * 7));
+
+        const toIsoDate = (value) => {
+          const year = value.getFullYear();
+          const month = String(value.getMonth() + 1).padStart(2, "0");
+          const day = String(value.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
+        calendarDateInput.min = toIsoDate(minDate);
+        calendarDateInput.max = toIsoDate(maxDate);
+      }
+
       function closeModal() {
         overlay.classList.remove("is-open");
         overlay.setAttribute("aria-hidden", "true");
@@ -1014,6 +1118,31 @@ $weeks = loadWeeks($db, $now);
         button.addEventListener("click", () => {
           openModal(button);
         });
+      });
+
+      setDatePickerRangeToLast8Weeks();
+
+      calendarAddBtn.addEventListener("click", () => {
+        if (typeof calendarDateInput.showPicker === "function") {
+          calendarDateInput.showPicker();
+          return;
+        }
+        calendarDateInput.click();
+      });
+
+      calendarDateInput.addEventListener("change", () => {
+        const selectedDate = calendarDateInput.value;
+        if (!selectedDate) {
+          return;
+        }
+        if ((calendarDateInput.min && selectedDate < calendarDateInput.min) ||
+            (calendarDateInput.max && selectedDate > calendarDateInput.max)) {
+          calendarDateInput.value = "";
+          return;
+        }
+
+        openModalForDate(selectedDate);
+        calendarDateInput.value = "";
       });
 
       cancelButton.addEventListener("click", closeModal);
