@@ -17,7 +17,7 @@ name | purpose
 `docs/design.md` | system design and architecture, source of decisions
 `docs/requests.md` | agent adds further specifications mentioned in the chat
 `docs/architecture.md` | detailed architecture maintained by the agent
-`examples` | for intermediate gui tests specified in `docs/examples.md`
+`examples` | folder for intermediate gui tests specified in `docs/examples.md`
 `timestamp.php` | single file application
 `timestamp.db` | sqlite3 database
 
@@ -33,3 +33,8 @@ name | purpose
     - summarize the previous prompts and the prompt log and replace the section "Prompt log" in `docs/context.md`
     - git stage all modified files.
     - make a git commit with the summary of current status as the commit message
+- "snapshot" means the following
+    - copy the current work item to `examples/snapshots/` using a date stamp and the next available version number.
+    - update `examples/snapshots/README.md` with the new snapshot entry.
+    - git stage all modified files.
+    - make a git commit describing the snapshot and baseline status.
