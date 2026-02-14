@@ -15,7 +15,7 @@
         "-d",
         "xdebug.client_port=9003",
         "-S",
-        "127.0.0.1:8000",
+        "0.0.0.0:8000",
         "-t",
         "${workspaceFolder}"
       ],
@@ -36,7 +36,7 @@
         "background": {
           "activeOnStart": true,
           "beginsPattern": "^PHP .* Development Server",
-          "endsPattern": "Development Server \\(http://127\\.0\\.0\\.1:8000\\) started"
+          "endsPattern": "Development Server \\(http://0\\.0\\.0\\.0:8000\\) started"
         }
       },
       "presentation": {

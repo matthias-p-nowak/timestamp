@@ -15,3 +15,5 @@
 - 2026-02-14 – Added a custom `favicon.ico` for work timekeeping branding (clock + briefcase visual) and linked it from `timestamp.php`.
 - 2026-02-14 – Added `favicon-32x32.png` and `apple-touch-icon.png` plus corresponding head links for wider browser/device icon support.
 - 2026-02-14 – Regenerated icon assets to improve sharpness and added full web app assets: `site.webmanifest`, `android-chrome-192x192.png`, `android-chrome-512x512.png`, plus manifest/theme-color wiring in `timestamp.php`.
+- 2026-02-14 – Updated `.vscode/tasks.json` PHP server task to bind `0.0.0.0:8000` so Android devices on the same LAN can connect.
+- 2026-02-14 – Added `.vscode/tasks.json` helper task `show-lan-url` to print the current LAN URL for quick Android access testing.
