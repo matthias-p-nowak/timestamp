@@ -16,6 +16,7 @@ This application records check-in and check-out timestamps at work and calculate
 - Weeks are displayed with the current week on top.
 - At most 8 weeks are displayed.
 - Days without time events are not shown in the daily list.
+- Day editing is triggered by tapping/clicking the day row itself.
 - When the user is checked in:
   - `header h1` shows the check-in timestamp.
   - The current day includes a line showing `<check-in>` with no end time.
@@ -36,6 +37,8 @@ This application records check-in and check-out timestamps at work and calculate
 
 ## Interaction model
 - There is no need for partial page replacement; the full page can be reloaded after actions.
+- In the modal editor, `Save` is blocked while any row is invalid, invalid fields are highlighted, and an inline validation message is shown.
+- In the modal editor, a hint is shown only when any valid row overlaps `11:30` to `12:00`; the hint must state that break is counted only when the full `11:30` to `12:00` window is covered.
 
 ## Page layout
 ~~~

@@ -67,6 +67,58 @@ function findOpenEntry(SQLite3 $db): ?array
     return $row !== false ? $row : null;
 }
 
+function enforceSingleOpenEntry(SQLite3 $db): ?array
+{
+    $result = $db->query(
+        'SELECT id, check_in_at
+         FROM time_entries
+         WHERE check_out_at IS NULL
+         ORDER BY check_in_at DESC, id DESC'
+    );
+    if ($result === false) {
+        return null;
+    }
+
+    $openRows = [];
+    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+        if ($row === false) {
+            break;
+        }
+        $openRows[] = $row;
+    }
+
+    if (count($openRows) === 0) {
+        return null;
+    }
+    if (count($openRows) === 1) {
+        return $openRows[0];
+    }
+
+    $keeper = $openRows[0];
+    $keeperCheckIn = (string) $keeper['check_in_at'];
+
+    $db->exec('BEGIN IMMEDIATE TRANSACTION');
+    try {
+        $updateStatement = $db->prepare('UPDATE time_entries SET check_out_at = :check_out_at WHERE id = :id');
+        for ($index = 1, $count = count($openRows); $index < $count; $index++) {
+            $row = $openRows[$index];
+            $rowCheckIn = (string) $row['check_in_at'];
+            $closeAt = strcmp($keeperCheckIn, $rowCheckIn) >= 0 ? $keeperCheckIn : $rowCheckIn;
+
+            $updateStatement->bindValue(':check_out_at', $closeAt, SQLITE3_TEXT);
+            $updateStatement->bindValue(':id', (int) $row['id'], SQLITE3_INTEGER);
+            $updateStatement->execute();
+            $updateStatement->clear();
+        }
+        $db->exec('COMMIT');
+    } catch (Throwable $error) {
+        $db->exec('ROLLBACK');
+        throw $error;
+    }
+
+    return $keeper;
+}
+
 function normalizeDate(string $date): ?string
 {
     $candidate = DateTimeImmutable::createFromFormat('Y-m-d', $date);
@@ -122,7 +174,7 @@ function normalizeEditableTime(string $time): ?string
 function handleToggleAction(SQLite3 $db, DateTimeImmutable $now): void
 {
     $nowSql = $now->format('Y-m-d H:i:s');
-    $openEntry = findOpenEntry($db);
+    $openEntry = enforceSingleOpenEntry($db);
 
     if ($openEntry === null) {
         $statement = $db->prepare('INSERT INTO time_entries (check_in_at, check_out_at) VALUES (:check_in_at, NULL)');
@@ -206,6 +258,8 @@ function handleSaveDayAction(SQLite3 $db): void
         throw $error;
     }
 
+    enforceSingleOpenEntry($db);
+
     header('Location: ' . strtok($_SERVER['REQUEST_URI'] ?? '/', '?'));
     exit;
 }
@@ -222,44 +276,6 @@ function handlePostActions(SQLite3 $db, DateTimeImmutable $now): void
     }
     if ($action === 'save-day') {
         handleSaveDayAction($db);
-    }
-}
-
-function seedSampleDataIfEmpty(SQLite3 $db): void
-{
-    $result = $db->querySingle('SELECT COUNT(*) FROM time_entries');
-    if ((int) $result > 0) {
-        return;
-    }
-
-    $sampleRows = [
-        ['2026-02-09 08:05:00', '2026-02-09 16:10:00'],
-        ['2026-02-10 08:00:00', '2026-02-10 11:32:00'],
-        ['2026-02-10 11:48:00', '2026-02-10 14:20:00'],
-        ['2026-02-10 14:35:00', '2026-02-10 16:02:00'],
-        ['2026-02-11 08:12:00', '2026-02-11 12:05:00'],
-        ['2026-02-11 12:40:00', '2026-02-11 16:10:00'],
-        ['2026-02-12 08:00:00', '2026-02-12 16:10:00'],
-        ['2026-02-13 08:10:00', '2026-02-13 10:50:00'],
-        ['2026-02-13 11:10:00', '2026-02-13 13:30:00'],
-        ['2026-02-13 13:45:00', '2026-02-13 15:22:00'],
-        ['2026-02-02 07:55:00', '2026-02-02 16:05:00'],
-        ['2026-02-03 08:10:00', '2026-02-03 12:00:00'],
-        ['2026-02-03 12:30:00', '2026-02-03 16:20:00'],
-        ['2026-02-04 08:05:00', '2026-02-04 10:40:00'],
-        ['2026-02-04 10:55:00', '2026-02-04 13:35:00'],
-        ['2026-02-04 13:55:00', '2026-02-04 16:08:00'],
-        ['2026-02-05 08:00:00', '2026-02-05 16:00:00'],
-        ['2026-02-06 08:10:00', '2026-02-06 11:45:00'],
-        ['2026-02-06 12:15:00', '2026-02-06 15:45:00'],
-    ];
-
-    $statement = $db->prepare('INSERT INTO time_entries (check_in_at, check_out_at) VALUES (:check_in_at, :check_out_at)');
-    foreach ($sampleRows as [$checkInAt, $checkOutAt]) {
-        $statement->bindValue(':check_in_at', $checkInAt, SQLITE3_TEXT);
-        $statement->bindValue(':check_out_at', $checkOutAt, SQLITE3_TEXT);
-        $statement->execute();
-        $statement->clear();
     }
 }
 
@@ -357,10 +373,9 @@ $now = new DateTimeImmutable('now');
 $db = new SQLite3(__DIR__ . '/timestamp.db');
 $db->enableExceptions(true);
 initializeSchema($db);
-seedSampleDataIfEmpty($db);
 handlePostActions($db, $now);
 
-$openEntry = findOpenEntry($db);
+$openEntry = enforceSingleOpenEntry($db);
 $isCheckedIn = $openEntry !== null;
 
 $headerTitle = $isCheckedIn

@@ -22,3 +22,8 @@
 - 2026-02-14 – accepted break-rule refinement: count break only when a pair fully covers `11:30` to `12:00`; partial overlap does not count.
 - 2026-02-14 – implemented break-rule refinement in `timestamp.php`: break minutes now apply only when a pair fully contains `11:30`–`12:00`.
 - 2026-02-14 – modal UX refinement: show a hint only when any valid row overlaps `11:30`–`12:00`, and clarify that break is counted only for full-window coverage.
+- 2026-02-14 – promoted missing canonical rules into `docs/design.md`: day-row-as-edit-trigger, modal save-blocking validation behavior, and overlap-triggered break hint messaging.
+- 2026-02-14 – created `docs/todo.md` as the dedicated actionable backlog and kept `docs/requests.md` as request history.
+- 2026-02-14 – never commit `timestamp.db`: added `.gitignore` rule and local git index safeguards to avoid accidental staging of DB changes.
+- 2026-02-14 – implemented backend safety handling for multiple open check-ins: detect concurrent open rows, keep the newest open, and auto-close older rows.
+- 2026-02-14 – removed first-run auto-seeding from `timestamp.php`; empty DB now stays empty until real user entries are created.

@@ -9,7 +9,7 @@
 
 ## Data model & flow (derived from design)
 - Data is stored in `time_entries` (`check_in_at`, `check_out_at`) and loaded from SQLite for rendering.
-- On empty databases, `timestamp.php` seeds representative sample rows so the mobile UI is populated on first run.
+- On empty databases, no sample rows are auto-created; only real user-created entries are rendered.
 - Time output is formatted as `HH:mm` in Europe/Oslo; writes currently occur only for schema setup and initial seed data.
 - The front-end renders week cards and lists only days that have time events.
 - The sample UI demonstrates split shifts and supports an unlimited number of check-in/check-out pairs while still presenting a single day-level total/break summary.
@@ -20,6 +20,8 @@
 - Save-day handling treats rows where both fields are empty as deletions (skipped), and replacing a day with only empty rows removes that day from storage.
 - Client-side modal validation now runs before submit: invalid rows are highlighted, first validation error is shown inline, and save is blocked until all rows are valid.
 - Modal editor now shows a conditional informational hint when any valid row overlaps `11:30`–`12:00`, while clarifying that break still counts only if the full window is covered.
+- Day-row click/tap is the canonical edit entrypoint for modal editing; no separate edit button is required.
+- Backend safety handling enforces a single open check-in row: if multiple open rows are detected, the newest remains open and older ones are auto-closed.
 
 ## Front-end intent
 - Mobile presentation is tuned for 1080×2340 screens with DPR 3: a sticky header for the “check-in/check-out” button and stacked week cards are delivered via simple HTML/CSS (see `examples/mobile.html`).
