@@ -164,9 +164,13 @@
 
       .pair-grid {
         display: grid;
+        gap: 0.45rem;
+      }
+
+      .pair-row {
+        display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 0.45rem;
-        align-items: center;
       }
 
       .pair-input {
@@ -176,6 +180,22 @@
         padding: 0.42rem 0.52rem;
         font-size: 0.86rem;
         color: #1f2c45;
+      }
+
+      .editor-actions {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 0.65rem;
+      }
+
+      .add-pair-btn {
+        border: none;
+        border-radius: 999px;
+        background: #e8eef8;
+        color: #1f2c45;
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 0.42rem 0.85rem;
       }
 
       .editor-footer {
@@ -370,13 +390,9 @@
     </div>
     <div class="editor-overlay" id="dayEditor" aria-hidden="true">
       <div class="editor-modal" role="dialog" aria-modal="true" aria-label="Edit day">
-        <div class="pair-grid">
-          <input class="pair-input" id="pair1in" type="text" value="08:00" />
-          <input class="pair-input" id="pair1out" type="text" value="16:00" />
-          <input class="pair-input" id="pair2in" type="text" value="" />
-          <input class="pair-input" id="pair2out" type="text" value="" />
-          <input class="pair-input" id="pair3in" type="text" value="" />
-          <input class="pair-input" id="pair3out" type="text" value="" />
+        <div class="pair-grid" id="pairGrid"></div>
+        <div class="editor-actions">
+          <button type="button" class="add-pair-btn" id="addPairBtn">Add pair</button>
         </div>
         <div class="editor-footer">
           <button type="button" class="modal-btn modal-btn-cancel" id="editorCancel">Cancel</button>
@@ -386,25 +402,45 @@
     </div>
     <script>
       const overlay = document.getElementById("dayEditor");
+      const pairGrid = document.getElementById("pairGrid");
+      const addPairBtn = document.getElementById("addPairBtn");
       const closeButtons = [document.getElementById("editorCancel"), document.getElementById("editorSave")];
 
-      function fillModalFromRow(row) {
-        const pairs = Array.from(row.querySelectorAll(".time-pair")).map((item) =>
-          item.textContent.trim()
-        );
-        const fields = [
-          [document.getElementById("pair1in"), document.getElementById("pair1out")],
-          [document.getElementById("pair2in"), document.getElementById("pair2out")],
-          [document.getElementById("pair3in"), document.getElementById("pair3out")],
-        ];
+      function addPairInputRow(inValue, outValue) {
+        const row = document.createElement("div");
+        row.className = "pair-row";
 
-        fields.forEach((fieldPair, index) => {
-          const text = pairs[index] || "";
+        const inInput = document.createElement("input");
+        inInput.className = "pair-input";
+        inInput.type = "text";
+        inInput.placeholder = "Check in";
+        inInput.value = inValue || "";
+
+        const outInput = document.createElement("input");
+        outInput.className = "pair-input";
+        outInput.type = "text";
+        outInput.placeholder = "Check out";
+        outInput.value = outValue || "";
+
+        row.appendChild(inInput);
+        row.appendChild(outInput);
+        pairGrid.appendChild(row);
+      }
+
+      function fillModalFromRow(row) {
+        pairGrid.innerHTML = "";
+        const pairs = Array.from(row.querySelectorAll(".time-pair")).map((item) => item.textContent.trim());
+
+        if (pairs.length === 0) {
+          addPairInputRow("", "");
+          return;
+        }
+
+        pairs.forEach((text) => {
           const split = text.split("-");
           const inValue = split[0] ? split[0].trim() : "";
           const outValue = split[1] ? split[1].trim() : "";
-          fieldPair[0].value = inValue;
-          fieldPair[1].value = outValue;
+          addPairInputRow(inValue, outValue);
         });
       }
 
@@ -434,6 +470,10 @@
 
       closeButtons.forEach((button) => {
         button.addEventListener("click", closeModal);
+      });
+
+      addPairBtn.addEventListener("click", () => {
+        addPairInputRow("", "");
       });
 
       overlay.addEventListener("click", (event) => {

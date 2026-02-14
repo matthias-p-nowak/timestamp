@@ -5,18 +5,7 @@
 - Use `docs/requests.md` to capture any new specifications mentioned during chat and keep `docs/architecture.md` in sync with decisions.
 
 ## Prompt log
-- 2026-02-14 – logged the instruction interpretation request about `AGENTS.md` line 18 and its implications for `docs/requests.md`.
-- 2026-02-14 – user referenced `docs/examples.md` and asked to “do this”, which currently points to creating an example `mobile.html` page.
-- 2026-02-14 – moved the mocked-up mobile layout inside `examples/mobile.html` and created the `examples` folder so the documentation accurately reflects the samples location.
-- 2026-02-14 – updated `examples/mobile.html` so each total/break pair uses `white-space: nowrap` and stays on one line per the latest feedback.
-- 2026-02-14 – added made-up days with up to three check-in/check-out pairs in `examples/mobile.html` to cover split-shift examples.
-- 2026-02-14 – created snapshot workflow: copied approved layout to `examples/snapshots/mobile-2026-02-14-v1.html` and added `examples/snapshots/README.md`.
-- 2026-02-14 – created `examples/snapshots/mobile-2026-02-14-v2.html` from current `examples/mobile.html` and set it as the active color-preference baseline.
-- 2026-02-14 – added a sample-only modal day-editor preview in `examples/mobile.html` so day edit controls can be visually tested without persistence.
-- 2026-02-14 – updated `AGENTS.md` abbreviations by adding `snapshot` with the current snapshot workflow, including staging and committing.
-- 2026-02-14 – ran `snapshot`: copied current `examples/mobile.html` to `examples/snapshots/mobile-2026-02-14-v3.html`, updated snapshot index, and prepared commit.
-- 2026-02-14 – changed the modal trigger to use clickable/focusable `.day-row` elements directly and removed `edit-day-btn` controls.
-- 2026-02-14 – removed `div.editor-header` from the modal editor and kept title/close layout with direct elements.
-- 2026-02-14 – removed modal header elements entirely by deleting both the title element and close button in `examples/mobile.html`.
-- 2026-02-14 – removed modal `span.pair-label` text so the editor shows only input fields in a two-column layout.
-- 2026-02-14 – ran `snapshot`: copied current `examples/mobile.html` to `examples/snapshots/mobile-2026-02-14-v4.html` and updated snapshot index.
+- 2026-02-14 – initialized project docs and sample structure: interpreted AGENTS instructions, added `docs/context.md`, `docs/architecture.md`, `docs/requests.md`, created `examples/mobile.html`, and aligned docs references to the `examples/` folder.
+- 2026-02-14 – iterated the mobile sample UI: enforced non-wrapping totals, added split-shift examples, added/removed color experiments, built and refined a sample-only modal day editor, switched edit trigger to clickable/focusable `.day-row`, removed modal header chrome, removed pair labels, and moved to dynamic unlimited pair inputs with an `Add pair` control.
+- 2026-02-14 – established and used snapshot workflow: documented `snapshot` abbreviation, created snapshots `v1` through `v4`, maintained `examples/snapshots/README.md`, and committed snapshot baselines.
+- 2026-02-14 – promoted stable rules into canonical docs: reorganized `docs/design.md` into structured sections, incorporated accepted draft specs (backend/storage, check-in header behavior, compact time input parsing, full-page reload model), and synchronized `docs/architecture.md`.

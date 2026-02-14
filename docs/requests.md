@@ -8,3 +8,4 @@
 - 2026-02-14 – remove `div.editor-header` from the modal editor in `examples/mobile.html`.
 - 2026-02-14 – remove the modal title element and close button from the editor UI in `examples/mobile.html`.
 - 2026-02-14 – remove `span.pair-label` text from the modal pair editor UI in `examples/mobile.html`.
+- 2026-02-14 – remove the pair-count limit: allow any number of check-in/check-out pairs and update the sample editor accordingly.
