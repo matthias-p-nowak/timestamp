@@ -423,7 +423,6 @@ $actionLabel = $isCheckedIn ? 'Check out' : $now->format('H:i');
 $versionTimestamp = (new DateTimeImmutable('@' . (string) filemtime(__FILE__)))
     ->setTimezone(new DateTimeZone('Europe/Oslo'))
     ->format('Y-m-d-H-i');
-$manifestVersion = (string) filemtime(__DIR__ . '/manifest.json');
 $editWindowStartDate = $now
     ->modify('monday this week')
     ->setTime(0, 0, 0)
@@ -440,7 +439,7 @@ $weeks = loadWeeks($db, $now);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1d7a0a" />
     <title>Timestamp Tracker</title>
-    <link rel="manifest" href="manifest.json?v=<?= htmlspecialchars($manifestVersion, ENT_QUOTES, 'UTF-8') ?>" />
+    <link rel="manifest" href="manifest.json" crossorigin="use-credentials" />
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180" />
