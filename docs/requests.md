@@ -1,29 +1,13 @@
 # Requests
-- 2026-02-14 – deliver the `examples/mobile.html` sample page referenced by `docs/examples.md` to demonstrate the mobile UI (per AGENTS.md line 20).
-- 2026-02-14 – add examples where some days contain up to three check-in/check-out pairs in `examples/mobile.html`.
-- 2026-02-14 – keep the current approved version as a snapshot at `examples/snapshots/mobile-2026-02-14-v1.html` and use a dated snapshot workflow going forward.
-- 2026-02-14 – create `examples/snapshots/mobile-2026-02-14-v2.html` from the current `examples/mobile.html` and treat it as the active color-preference baseline.
-- 2026-02-14 – add a sample-only modal day editor preview to `examples/mobile.html` for visual testing (no persistence).
-- 2026-02-14 – use `.day-row` itself as the edit trigger and remove `.edit-day-btn` from `examples/mobile.html`.
-- 2026-02-14 – remove `div.editor-header` from the modal editor in `examples/mobile.html`.
-- 2026-02-14 – remove the modal title element and close button from the editor UI in `examples/mobile.html`.
-- 2026-02-14 – remove `span.pair-label` text from the modal pair editor UI in `examples/mobile.html`.
-- 2026-02-14 – remove the pair-count limit: allow any number of check-in/check-out pairs and update the sample editor accordingly.
-- 2026-02-14 – new design specs: hide days without time events and apply fixed break exclusion for covered `11:30` to `12:00` intervals.
-- 2026-02-14 – implement real `timestamp.php` as a UI scaffold using `examples/mobile.html` patterns: modal day editor from `.day-row`, unlimited pair inputs, hidden empty days, and no `timestamp.db` usage yet.
-- 2026-02-14 – implement SQLite initialization and usage in `timestamp.php`: create schema for `time_entries`, seed first-run sample rows, and render week/day view from `timestamp.db`.
-- 2026-02-14 – implement real header check-in/check-out toggle in `timestamp.php`: POST action writes to `time_entries`, closes latest open row on check-out, and updates header title/button based on open state.
-- 2026-02-14 – implement modal day-editor persistence in `timestamp.php`: save submitted pairs for selected date into `time_entries`, skip rows where both values are empty, and allow day deletion by clearing all rows.
-- 2026-02-14 – implement compact time parsing in modal save flow: accept `HH:mm`, `745`, and `1712`-style inputs and normalize to `HH:mm` before storing.
-- 2026-02-14 – implement client-side modal validation: highlight invalid row inputs, show inline error text, and block save submit until row formats/order are valid.
-- 2026-02-14 – accepted new UX spec: show a tiny grey footer version stamp in `yyyy-mm-dd-HH-MM` format, sourced from `timestamp.php` last-modified timestamp.
-- 2026-02-14 – mirror the new version-stamp UX in `examples/mobile.html` by adding a tiny grey footer stamp for visual reference.
-- 2026-02-14 – implement the real footer version stamp in `timestamp.php` using `timestamp.php` file mtime formatted as `yyyy-mm-dd-HH-MM`.
-- 2026-02-14 – accepted break-rule refinement: count break only when a pair fully covers `11:30` to `12:00`; partial overlap does not count.
-- 2026-02-14 – implemented break-rule refinement in `timestamp.php`: break minutes now apply only when a pair fully contains `11:30`–`12:00`.
-- 2026-02-14 – modal UX refinement: show a hint only when any valid row overlaps `11:30`–`12:00`, and clarify that break is counted only for full-window coverage.
-- 2026-02-14 – promoted missing canonical rules into `docs/design.md`: day-row-as-edit-trigger, modal save-blocking validation behavior, and overlap-triggered break hint messaging.
-- 2026-02-14 – created `docs/todo.md` as the dedicated actionable backlog and kept `docs/requests.md` as request history.
-- 2026-02-14 – never commit `timestamp.db`: added `.gitignore` rule and local git index safeguards to avoid accidental staging of DB changes.
-- 2026-02-14 – implemented backend safety handling for multiple open check-ins: detect concurrent open rows, keep the newest open, and auto-close older rows.
-- 2026-02-14 – removed first-run auto-seeding from `timestamp.php`; empty DB now stays empty until real user entries are created.
+
+## Active requests
+- No open items are tracked here.
+- Use `docs/todo.md` for actionable backlog items.
+
+## Historical requests
+- 2026-02-14 – Established and iterated the mobile sample workflow in `examples/mobile.html`, including split-shift examples, row-triggered modal editing, unlimited pairs, and a footer version-stamp preview; snapshot workflow was established with dated versions under `examples/snapshots/`.
+- 2026-02-14 – Built `timestamp.php` into a working SQLite-backed app with schema initialization, check-in/check-out POST toggling, 8-week rendering, persisted day editing, and full-page reload interaction model.
+- 2026-02-14 – Standardized edit/save behavior: delete row on both-empty values, compact time parsing (`745`, `1712`), and client-side validation with blocking save plus inline error/highlight feedback.
+- 2026-02-14 – Finalized break handling: break counts only when a pair fully covers `11:30`–`12:00`; modal shows overlap hint text only when overlap exists and clarifies full-window requirement.
+- 2026-02-14 – Finalized footer version behavior: tiny grey `yyyy-mm-dd-HH-MM` stamp sourced from `timestamp.php` file mtime.
+- 2026-02-14 – Improved operational safety and docs hygiene: backend repair for multiple open sessions, removed automatic DB seeding, created `docs/todo.md` for active backlog, and declared `timestamp.db` must not be committed.
