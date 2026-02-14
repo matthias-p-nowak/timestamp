@@ -15,3 +15,8 @@
 - 2026-02-14 – added a sample-only modal day-editor preview in `examples/mobile.html` so day edit controls can be visually tested without persistence.
 - 2026-02-14 – updated `AGENTS.md` abbreviations by adding `snapshot` with the current snapshot workflow, including staging and committing.
 - 2026-02-14 – ran `snapshot`: copied current `examples/mobile.html` to `examples/snapshots/mobile-2026-02-14-v3.html`, updated snapshot index, and prepared commit.
+- 2026-02-14 – changed the modal trigger to use clickable/focusable `.day-row` elements directly and removed `edit-day-btn` controls.
+- 2026-02-14 – removed `div.editor-header` from the modal editor and kept title/close layout with direct elements.
+- 2026-02-14 – removed modal header elements entirely by deleting both the title element and close button in `examples/mobile.html`.
+- 2026-02-14 – removed modal `span.pair-label` text so the editor shows only input fields in a two-column layout.
+- 2026-02-14 – ran `snapshot`: copied current `examples/mobile.html` to `examples/snapshots/mobile-2026-02-14-v4.html` and updated snapshot index.

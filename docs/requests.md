@@ -4,3 +4,7 @@
 - 2026-02-14 – keep the current approved version as a snapshot at `examples/snapshots/mobile-2026-02-14-v1.html` and use a dated snapshot workflow going forward.
 - 2026-02-14 – create `examples/snapshots/mobile-2026-02-14-v2.html` from the current `examples/mobile.html` and treat it as the active color-preference baseline.
 - 2026-02-14 – add a sample-only modal day editor preview to `examples/mobile.html` for visual testing (no persistence).
+- 2026-02-14 – use `.day-row` itself as the edit trigger and remove `.edit-day-btn` from `examples/mobile.html`.
+- 2026-02-14 – remove `div.editor-header` from the modal editor in `examples/mobile.html`.
+- 2026-02-14 – remove the modal title element and close button from the editor UI in `examples/mobile.html`.
+- 2026-02-14 – remove `span.pair-label` text from the modal pair editor UI in `examples/mobile.html`.
