@@ -9,3 +9,12 @@
 - 2026-02-14 – remove the modal title element and close button from the editor UI in `examples/mobile.html`.
 - 2026-02-14 – remove `span.pair-label` text from the modal pair editor UI in `examples/mobile.html`.
 - 2026-02-14 – remove the pair-count limit: allow any number of check-in/check-out pairs and update the sample editor accordingly.
+- 2026-02-14 – new design specs: hide days without time events and apply fixed break exclusion for covered `11:30` to `12:00` intervals.
+- 2026-02-14 – implement real `timestamp.php` as a UI scaffold using `examples/mobile.html` patterns: modal day editor from `.day-row`, unlimited pair inputs, hidden empty days, and no `timestamp.db` usage yet.
+- 2026-02-14 – implement SQLite initialization and usage in `timestamp.php`: create schema for `time_entries`, seed first-run sample rows, and render week/day view from `timestamp.db`.
+- 2026-02-14 – implement real header check-in/check-out toggle in `timestamp.php`: POST action writes to `time_entries`, closes latest open row on check-out, and updates header title/button based on open state.
+- 2026-02-14 – implement modal day-editor persistence in `timestamp.php`: save submitted pairs for selected date into `time_entries`, skip rows where both values are empty, and allow day deletion by clearing all rows.
+- 2026-02-14 – implement compact time parsing in modal save flow: accept `HH:mm`, `745`, and `1712`-style inputs and normalize to `HH:mm` before storing.
+- 2026-02-14 – implement client-side modal validation: highlight invalid row inputs, show inline error text, and block save submit until row formats/order are valid.
+- 2026-02-14 – accepted new UX spec: show a tiny grey footer version stamp in `yyyy-mm-dd-HH-MM` format, sourced from `timestamp.php` last-modified timestamp.
+- 2026-02-14 – mirror the new version-stamp UX in `examples/mobile.html` by adding a tiny grey footer stamp for visual reference.

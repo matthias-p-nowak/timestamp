@@ -5,7 +5,4 @@
 - Use `docs/requests.md` to capture any new specifications mentioned during chat and keep `docs/architecture.md` in sync with decisions.
 
 ## Prompt log
-- 2026-02-14 – initialized project docs and sample structure: interpreted AGENTS instructions, added `docs/context.md`, `docs/architecture.md`, `docs/requests.md`, created `examples/mobile.html`, and aligned docs references to the `examples/` folder.
-- 2026-02-14 – iterated the mobile sample UI: enforced non-wrapping totals, added split-shift examples, added/removed color experiments, built and refined a sample-only modal day editor, switched edit trigger to clickable/focusable `.day-row`, removed modal header chrome, removed pair labels, and moved to dynamic unlimited pair inputs with an `Add pair` control.
-- 2026-02-14 – established and used snapshot workflow: documented `snapshot` abbreviation, created snapshots `v1` through `v4`, maintained `examples/snapshots/README.md`, and committed snapshot baselines.
-- 2026-02-14 – promoted stable rules into canonical docs: reorganized `docs/design.md` into structured sections, incorporated accepted draft specs (backend/storage, check-in header behavior, compact time input parsing, full-page reload model), and synchronized `docs/architecture.md`.
+- 2026-02-14 – session summary: established and refined docs/workflows (`new specs`, `snapshot`, `good`), evolved `examples/mobile.html` into the approved mobile baseline (including modal editor and footer version-stamp preview), and implemented `timestamp.php` as a working SQLite-backed app with check-in/check-out toggling, 8-week rendering, day editing persistence, compact time parsing, and client-side modal validation; synchronized `docs/design.md`, `docs/architecture.md`, and `docs/requests.md` throughout.

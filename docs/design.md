@@ -11,10 +11,11 @@ This application records check-in and check-out timestamps at work and calculate
 ## UX behavior
 - The app is mainly used from a mobile device with 1080 × 2340 and DPR 3.
 - The top action is a `check-in/check-out` button that displays either `check in` or `check out`.
+- At the bottom of the page, show a version stamp in tiny grey text using format `yyyy-mm-dd-HH-MM`.
+- Version stamp source is the last-modified timestamp of `timestamp.php`.
 - Weeks are displayed with the current week on top.
 - At most 8 weeks are displayed.
-- `<wd>` covers the full Monday-through-Sunday span, including Saturday and Sunday.
-- The row `<monday> <tuesday> <wednesday> <thursday> <friday> <saturday> <sunday>` lists those seven daily totals with two-decimal precision.
+- Days without time events are not shown in the daily list.
 - When the user is checked in:
   - `header h1` shows the check-in timestamp.
   - The current day includes a line showing `<check-in>` with no end time.
@@ -26,6 +27,7 @@ This application records check-in and check-out timestamps at work and calculate
 ## Data rules
 - A day may contain any number of check-in/check-out pairs (no fixed upper limit).
 - Daily output still resolves to one day-level `<total>/<break>` summary.
+- For each check-in/check-out row, any covered interval between `11:30` and `12:00` counts as break and is excluded from total work time.
 - When editing times, `:` may be omitted:
   - `745` means `07:45`.
   - `1712` means `17:12`.

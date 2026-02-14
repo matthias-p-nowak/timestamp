@@ -3,6 +3,7 @@
 - If there are several possibilities, list the options and ask the user.
 - maintain a log of the prompts in `docs/context.md` under "Prompt log"
 - keep `docs/architecture.md` updated.
+- at the end of a task, propose the next few step and let the user choose the next one
 
 ## Restrictions
 - Stay inside this folder!
@@ -38,3 +39,9 @@ name | purpose
     - update `examples/snapshots/README.md` with the new snapshot entry.
     - git stage all modified files.
     - make a git commit describing the snapshot and baseline status.
+- "new specs" means the following
+    - review and normalize items under `docs/design.md` -> `## New specs (draft)`.
+    - move accepted items into the canonical sections in `docs/design.md` and remove them from draft.
+    - keep `docs/architecture.md` aligned with the resulting design rules.
+    - record the newly accepted requirements in `docs/requests.md`.
+    - append a prompt-log summary entry in `docs/context.md`.

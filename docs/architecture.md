@@ -1,22 +1,31 @@
 # Architecture
 
 ## Application landscape
-- Single-page PHP entrypoint (`timestamp.php`) renders the mobile-focused tracker and handles every check-in/check-out toggle.
+- Single-page PHP entrypoint (`timestamp.php`) now exists as a real mobile-focused scaffold and reuses the established `examples/mobile.html` visual/interaction patterns.
 - Authentication occurs at the web server layer via `.htaccess` protections; no additional user accounts exist beyond the single authorized user.
-- Data persistence is handled through the bundled `timestamp.db` SQLite file so deployments stay self-contained and lightweight.
+- `timestamp.php` now initializes and reads SQLite data from `timestamp.db`, including first-run schema creation.
+- Header check-in/check-out control now performs real POST toggle actions: check-in inserts an open row and check-out closes the latest open row, followed by full-page reload.
+- Day editor modal now submits persisted edits: `save-day` POST replaces all entries for the selected date in `time_entries` with submitted pairs.
 
 ## Data model & flow (derived from design)
-- Each row represents a pair of check-in/check-out timestamps plus an optional break duration; totals are calculated per day and summarized per week.
-- Time data is formatted as `HH:mm` in Europe/Oslo; the server logic normalizes to that timezone before storing/displaying to keep entries consistent.
-- The front-end renders up to eight weeks, always covering Monday through Sunday, with daily totals in two-decimal precision so clients can compare hours/breaks at a glance.
+- Data is stored in `time_entries` (`check_in_at`, `check_out_at`) and loaded from SQLite for rendering.
+- On empty databases, `timestamp.php` seeds representative sample rows so the mobile UI is populated on first run.
+- Time output is formatted as `HH:mm` in Europe/Oslo; writes currently occur only for schema setup and initial seed data.
+- The front-end renders week cards and lists only days that have time events.
 - The sample UI demonstrates split shifts and supports an unlimited number of check-in/check-out pairs while still presenting a single day-level total/break summary.
-- Editing accepts compact time input without `:` (for example `745` -> `07:45`, `1712` -> `17:12`) and deleting both values in a pair removes that row.
-- After edits, the application can use full-page reloads to refresh recalculated totals; no partial-page update mechanism is required.
+- For each pair, overlapping time from `11:30` to `12:00` is treated as break and excluded from worked totals.
+- Editing accepts compact time input without `:` (for example `745` -> `07:45`, `1712` -> `17:12`) and normalizes values before persistence; deleting both values in a pair removes that row.
+- In the scaffold, modal editing is front-end only and does not persist yet; full-page reload flow remains the planned persistence model.
+- Header state is now data-driven from open entry state: when checked in, `header h1` shows check-in time and action button shows `Check out`; when not checked in, `header h1` shows `Timestamp` and action button shows current time.
+- Save-day handling treats rows where both fields are empty as deletions (skipped), and replacing a day with only empty rows removes that day from storage.
+- Client-side modal validation now runs before submit: invalid rows are highlighted, first validation error is shown inline, and save is blocked until all rows are valid.
 
 ## Front-end intent
 - Mobile presentation is tuned for 1080×2340 screens with DPR 3: a sticky header for the “check-in/check-out” button and stacked week cards are delivered via simple HTML/CSS (see `examples/mobile.html`).
 - Sample data page (`examples/mobile.html`) mirrors the production layout so designers/testers can see the Monday–Sunday rows, week separators, and total/break labeling that the live app needs to deliver.
+- Sample data page (`examples/mobile.html`) now also includes a tiny grey footer version-stamp preview so the bottom-of-page treatment can be validated visually.
 - Approved example states are frozen as dated files under `examples/snapshots/` so UI decisions can be referenced without diffing commit history.
 - Active color-preference baseline is snapshot `examples/snapshots/mobile-2026-02-14-v2.html`.
 - The sample page also includes a modal day-editor prototype triggered per row to preview editing UI; the modal is front-end only and does not persist changes.
 - Header state reflects check-in status: when checked in, `header h1` shows the check-in time and the action button says `Check out`; when not checked in, `header h1` shows `Timestamp` and the action button shows current time.
+- Footer includes a tiny grey version stamp rendered as `yyyy-mm-dd-HH-MM`, sourced from `timestamp.php` file last-modified time.
