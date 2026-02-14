@@ -18,3 +18,7 @@
 - 2026-02-14 – implement client-side modal validation: highlight invalid row inputs, show inline error text, and block save submit until row formats/order are valid.
 - 2026-02-14 – accepted new UX spec: show a tiny grey footer version stamp in `yyyy-mm-dd-HH-MM` format, sourced from `timestamp.php` last-modified timestamp.
 - 2026-02-14 – mirror the new version-stamp UX in `examples/mobile.html` by adding a tiny grey footer stamp for visual reference.
+- 2026-02-14 – implement the real footer version stamp in `timestamp.php` using `timestamp.php` file mtime formatted as `yyyy-mm-dd-HH-MM`.
+- 2026-02-14 – accepted break-rule refinement: count break only when a pair fully covers `11:30` to `12:00`; partial overlap does not count.
+- 2026-02-14 – implemented break-rule refinement in `timestamp.php`: break minutes now apply only when a pair fully contains `11:30`–`12:00`.
+- 2026-02-14 – modal UX refinement: show a hint only when any valid row overlaps `11:30`–`12:00`, and clarify that break is counted only for full-window coverage.

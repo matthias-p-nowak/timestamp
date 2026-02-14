@@ -13,11 +13,12 @@ function minutesFromTimeString(string $time): int
     return $hours * 60 + $minutes;
 }
 
-function overlapMinutes(int $startA, int $endA, int $startB, int $endB): int
+function breakMinutesForPair(int $inMinutes, int $outMinutes): int
 {
-    $start = max($startA, $startB);
-    $end = min($endA, $endB);
-    return max(0, $end - $start);
+    if ($inMinutes <= BREAK_START_MINUTES && $outMinutes >= BREAK_END_MINUTES) {
+        return BREAK_END_MINUTES - BREAK_START_MINUTES;
+    }
+    return 0;
 }
 
 function formatHoursFromMinutes(int $minutes): string
@@ -315,7 +316,7 @@ function loadWeeks(SQLite3 $db, DateTimeImmutable $now): array
             $inMinutes = minutesFromTimeString($checkInLabel);
             $outMinutes = minutesFromTimeString($checkOutLabel);
             $pairMinutes = max(0, $outMinutes - $inMinutes);
-            $breakMinutes = overlapMinutes($inMinutes, $outMinutes, BREAK_START_MINUTES, BREAK_END_MINUTES);
+            $breakMinutes = breakMinutesForPair($inMinutes, $outMinutes);
 
             $weeks[$weekKey]['days'][$dayKey]['break_minutes'] += $breakMinutes;
             $weeks[$weekKey]['days'][$dayKey]['total_minutes'] += max(0, $pairMinutes - $breakMinutes);
@@ -366,6 +367,9 @@ $headerTitle = $isCheckedIn
     ? (new DateTimeImmutable((string) $openEntry['check_in_at']))->format('H:i')
     : 'Timestamp';
 $actionLabel = $isCheckedIn ? 'Check out' : $now->format('H:i');
+$versionTimestamp = (new DateTimeImmutable('@' . (string) filemtime(__FILE__)))
+    ->setTimezone(new DateTimeZone('Europe/Oslo'))
+    ->format('Y-m-d-H-i');
 $weeks = loadWeeks($db, $now);
 
 ?>
@@ -569,6 +573,13 @@ $weeks = loadWeeks($db, $now);
         min-height: 1.1rem;
       }
 
+      .editor-hint {
+        margin-top: 0.35rem;
+        color: #666d78;
+        font-size: 0.72rem;
+        line-height: 1.3;
+      }
+
       .editor-actions {
         display: flex;
         justify-content: flex-start;
@@ -620,6 +631,14 @@ $weeks = loadWeeks($db, $now);
         background: #e1ffeb;
         color: #03a125;
         font-size: 0.75rem;
+      }
+
+      .version-stamp {
+        margin: 0.75rem 0.25rem 0;
+        text-align: center;
+        color: #8a9099;
+        font-size: 0.66rem;
+        letter-spacing: 0.03em;
       }
 
       .visually-hidden {
@@ -689,6 +708,9 @@ $weeks = loadWeeks($db, $now);
           </section>
         <?php endforeach; ?>
       </main>
+      <footer class="version-stamp" aria-label="Version stamp">
+        <?= htmlspecialchars($versionTimestamp, ENT_QUOTES, 'UTF-8') ?>
+      </footer>
     </div>
 
     <div class="editor-overlay" id="dayEditor" aria-hidden="true">
@@ -698,6 +720,9 @@ $weeks = loadWeeks($db, $now);
         <h2 class="visually-hidden" id="editorDayLabel">Edit day</h2>
         <div class="pair-grid" id="pairGrid"></div>
         <div class="editor-errors" id="editorErrors" aria-live="polite"></div>
+        <div class="editor-hint" id="breakHint" hidden>
+          Overlap with 11:30-12:00 detected. Break is counted only when the full 11:30-12:00 window is covered.
+        </div>
         <div class="editor-actions">
           <button type="button" class="add-pair-btn" id="addPairBtn">Add pair</button>
         </div>
@@ -717,6 +742,9 @@ $weeks = loadWeeks($db, $now);
       const dayDateInput = document.getElementById("editorDayDate");
       const editorForm = overlay.querySelector("form");
       const editorErrors = document.getElementById("editorErrors");
+      const breakHint = document.getElementById("breakHint");
+      const BREAK_START_MINUTES = (11 * 60) + 30;
+      const BREAK_END_MINUTES = 12 * 60;
 
       function parseCompactTime(value) {
         const raw = value.trim();
@@ -782,6 +810,7 @@ $weeks = loadWeeks($db, $now);
         const rows = Array.from(pairGrid.querySelectorAll(".pair-row"));
         let firstError = "";
         let hasError = false;
+        let hasOverlapWithBreakWindow = false;
 
         rows.forEach((row) => {
           const inInput = row.querySelector('input[name="pair_in[]"]');
@@ -825,6 +854,12 @@ $weeks = loadWeeks($db, $now);
             }
           }
 
+          if (rowValid && inParsed !== null && outParsed !== null) {
+            if (inParsed.totalMinutes < BREAK_END_MINUTES && outParsed.totalMinutes > BREAK_START_MINUTES) {
+              hasOverlapWithBreakWindow = true;
+            }
+          }
+
           setInputValidity(inInput, rowValid || inParsed !== null);
           setInputValidity(outInput, rowValid || outValue === "" || outParsed !== null);
 
@@ -834,6 +869,7 @@ $weeks = loadWeeks($db, $now);
         });
 
         editorErrors.textContent = hasError ? firstError : "";
+        breakHint.hidden = !hasOverlapWithBreakWindow;
         saveButton.disabled = hasError;
         saveButton.setAttribute("aria-disabled", hasError ? "true" : "false");
         return !hasError;

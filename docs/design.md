@@ -27,7 +27,7 @@ This application records check-in and check-out timestamps at work and calculate
 ## Data rules
 - A day may contain any number of check-in/check-out pairs (no fixed upper limit).
 - Daily output still resolves to one day-level `<total>/<break>` summary.
-- For each check-in/check-out row, any covered interval between `11:30` and `12:00` counts as break and is excluded from total work time.
+- For each check-in/check-out row, break is counted only when the full interval `11:30` to `12:00` is inside that row’s check-in/check-out period.
 - When editing times, `:` may be omitted:
   - `745` means `07:45`.
   - `1712` means `17:12`.

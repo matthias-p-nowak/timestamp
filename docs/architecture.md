@@ -13,12 +13,13 @@
 - Time output is formatted as `HH:mm` in Europe/Oslo; writes currently occur only for schema setup and initial seed data.
 - The front-end renders week cards and lists only days that have time events.
 - The sample UI demonstrates split shifts and supports an unlimited number of check-in/check-out pairs while still presenting a single day-level total/break summary.
-- For each pair, overlapping time from `11:30` to `12:00` is treated as break and excluded from worked totals.
+- For each pair, break is applied only when the full `11:30` to `12:00` interval is contained inside that pair; partial overlap does not count as break.
 - Editing accepts compact time input without `:` (for example `745` -> `07:45`, `1712` -> `17:12`) and normalizes values before persistence; deleting both values in a pair removes that row.
-- In the scaffold, modal editing is front-end only and does not persist yet; full-page reload flow remains the planned persistence model.
+- Modal editing persists via `save-day` POST actions that replace selected-day entries in SQLite; full-page reload remains the update model.
 - Header state is now data-driven from open entry state: when checked in, `header h1` shows check-in time and action button shows `Check out`; when not checked in, `header h1` shows `Timestamp` and action button shows current time.
 - Save-day handling treats rows where both fields are empty as deletions (skipped), and replacing a day with only empty rows removes that day from storage.
 - Client-side modal validation now runs before submit: invalid rows are highlighted, first validation error is shown inline, and save is blocked until all rows are valid.
+- Modal editor now shows a conditional informational hint when any valid row overlaps `11:30`–`12:00`, while clarifying that break still counts only if the full window is covered.
 
 ## Front-end intent
 - Mobile presentation is tuned for 1080×2340 screens with DPR 3: a sticky header for the “check-in/check-out” button and stacked week cards are delivered via simple HTML/CSS (see `examples/mobile.html`).
