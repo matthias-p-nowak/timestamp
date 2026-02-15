@@ -52,6 +52,17 @@ function formatHoursFromMinutes(int $minutes): string
 }
 
 /**
+ * Escapes output for safe HTML rendering.
+ *
+ * @param string $value Raw text value.
+ * @return string Escaped HTML string.
+ */
+function e(string $value): string
+{
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+/**
  * Builds a compact display range for one ISO week.
  *
  * Examples:
@@ -294,6 +305,7 @@ function handleSaveDayAction(PDO $db, DateTimeImmutable $now): void
 {
     $date = isset($_POST['day_date']) ? trim((string) $_POST['day_date']) : '';
     $normalizedDate = normalizeDate($date);
+    // Redirects the client back to the current path (without query string), causing a fresh GET request.
     if ($normalizedDate === null) {
         header('Location: ' . strtok($_SERVER['REQUEST_URI'] ?? '/', '?'));
         exit;
@@ -546,10 +558,10 @@ $weeks = loadWeeks($db, $now);
   <body>
     <div class="device-frame" role="main">
       <header>
-        <h1><?= htmlspecialchars($headerTitle, ENT_QUOTES, 'UTF-8') ?></h1>
+        <h1><?= e($headerTitle) ?></h1>
         <form method="post">
           <input type="hidden" name="action" value="toggle-check" />
-          <button type="submit" aria-label="Check in or out"><?= htmlspecialchars($actionLabel, ENT_QUOTES, 'UTF-8') ?></button>
+          <button type="submit" aria-label="Check in or out"><?= e($actionLabel) ?></button>
         </form>
       </header>
 
@@ -569,7 +581,7 @@ $weeks = loadWeeks($db, $now);
             <div class="week-heading">
               <span class="pill">Week <?= (int) $week['week_number'] ?></span>
               <span aria-hidden="true">•</span>
-              <span><?= htmlspecialchars($week['range'], ENT_QUOTES, 'UTF-8') ?></span>
+              <span><?= e($week['range']) ?></span>
             </div>
 
             <?php foreach ($visibleDays as $day): ?>
@@ -577,22 +589,22 @@ $weeks = loadWeeks($db, $now);
                 class="day-row"
                 role="button"
                 tabindex="0"
-                data-day="<?= htmlspecialchars($day['weekday'], ENT_QUOTES, 'UTF-8') ?>"
-                data-date="<?= htmlspecialchars($day['date'], ENT_QUOTES, 'UTF-8') ?>"
-                aria-label="Edit <?= htmlspecialchars($day['weekday'], ENT_QUOTES, 'UTF-8') ?>"
+                data-day="<?= e($day['weekday']) ?>"
+                data-date="<?= e($day['date']) ?>"
+                aria-label="Edit <?= e($day['weekday']) ?>"
               >
-                <span class="weekday"><?= htmlspecialchars($day['weekday'], ENT_QUOTES, 'UTF-8') ?></span>
+                <span class="weekday"><?= e($day['weekday']) ?></span>
                 <span class="times">
                   <span class="time-pairs">
                     <?php foreach ($day['pairs'] as $pair): ?>
                       <span class="time-pair">
-                        <?= htmlspecialchars($pair['in'], ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars($pair['out'], ENT_QUOTES, 'UTF-8') ?>
+                        <?= e($pair['in']) ?> - <?= e($pair['out']) ?>
                       </span>
                     <?php endforeach; ?>
                   </span>
                 </span>
                 <span class="totals">
-                  <?= htmlspecialchars($day['total'], ENT_QUOTES, 'UTF-8') ?> / <?= htmlspecialchars($day['break'], ENT_QUOTES, 'UTF-8') ?>
+                  <?= e($day['total']) ?> / <?= e($day['break']) ?>
                 </span>
               </div>
             <?php endforeach; ?>
@@ -604,11 +616,11 @@ $weeks = loadWeeks($db, $now);
                     <button
                       type="button"
                       class="missing-day-btn"
-                      data-day="<?= htmlspecialchars($missingDay['weekday'], ENT_QUOTES, 'UTF-8') ?>"
-                      data-date="<?= htmlspecialchars($missingDay['date'], ENT_QUOTES, 'UTF-8') ?>"
-                      aria-label="Add entries for <?= htmlspecialchars($missingDay['weekday'], ENT_QUOTES, 'UTF-8') ?>"
+                      data-day="<?= e($missingDay['weekday']) ?>"
+                      data-date="<?= e($missingDay['date']) ?>"
+                      aria-label="Add entries for <?= e($missingDay['weekday']) ?>"
                     >
-                      <?= htmlspecialchars($missingDay['weekday'], ENT_QUOTES, 'UTF-8') ?>
+                      <?= e($missingDay['weekday']) ?>
                     </button>
                   <?php endforeach; ?>
                 </div>
@@ -622,8 +634,8 @@ $weeks = loadWeeks($db, $now);
           type="date"
           id="calendarDateInput"
           class="visually-hidden"
-          min="<?= htmlspecialchars($editWindowStartDate, ENT_QUOTES, 'UTF-8') ?>"
-          max="<?= htmlspecialchars($editWindowEndDate, ENT_QUOTES, 'UTF-8') ?>"
+          min="<?= e($editWindowStartDate) ?>"
+          max="<?= e($editWindowEndDate) ?>"
           aria-label="Select date"
         />
         <button type="button" id="calendarAddBtn" class="calendar-add-btn" aria-label="Add entries for date">
@@ -631,7 +643,7 @@ $weeks = loadWeeks($db, $now);
         </button>
       </div>
       <footer class="version-stamp" aria-label="Version stamp">
-        <?= htmlspecialchars($versionTimestamp, ENT_QUOTES, 'UTF-8') ?>
+        <?= e($versionTimestamp) ?>
       </footer>
     </div>
 

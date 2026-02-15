@@ -8,6 +8,7 @@
 - `timestamp.php` now initializes and reads SQLite data from `timestamp.db`, including first-run schema creation.
 - Storage engine remains SQLite, and database access is now implemented via PDO (`sqlite:` DSN, exception mode, associative fetch mode).
 - Core backend helpers and request handlers in `timestamp.php` now maintain explicit PHPDoc comments to keep function intent and validation behavior auditable in-code.
+- HTML output escaping in `timestamp.php` is now centralized through a tiny `e(string): string` helper that wraps `htmlspecialchars` with `ENT_QUOTES` and UTF-8.
 - Header check-in/check-out control now performs real POST toggle actions: check-in inserts an open row and check-out closes the latest open row, followed by full-page reload.
 - Day editor modal now submits persisted edits: `save-day` POST replaces all entries for the selected date in `time_entries` with submitted pairs.
 
