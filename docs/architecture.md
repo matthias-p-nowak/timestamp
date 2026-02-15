@@ -3,6 +3,7 @@
 ## Application landscape
 - Single-page PHP entrypoint (`timestamp.php`) now exists as a real mobile-focused scaffold and reuses the established `examples/mobile.html` visual/interaction patterns.
 - Front-end presentation and behavior assets are now split into dedicated static files (`timestamp.css`, `timestamp.js`) loaded by `timestamp.php` instead of inline blocks.
+- Cache busting is intentionally disabled for the primary front-end assets: `timestamp.css` and `timestamp.js` are referenced without version query strings or hashed filenames.
 - Client-side script organization in `timestamp.js` now centralizes selectors, UI text, and behavior constants in one top-level `UI_CONFIG` object to simplify future maintenance.
 - Authentication occurs at the web server layer via `.htaccess` protections; no additional user accounts exist beyond the single authorized user.
 - `timestamp.php` now initializes and reads SQLite data from `timestamp.db`, including first-run schema creation.

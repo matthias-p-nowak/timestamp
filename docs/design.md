@@ -7,6 +7,7 @@ This application records check-in and check-out timestamps at work and calculate
 - Authentication is handled via `.htaccess`.
 - This is a single-user application.
 - Backend is implemented in `timestamp.php` with `timestamp.db` (SQLite3) as data storage.
+- Do not use cache-busting mechanisms for `timestamp.css` and `timestamp.js`.
 - European formats rule
   - weeks start on monday
   - date format displayed should be yyyy-mm-dd
@@ -76,6 +77,3 @@ This application records check-in and check-out timestamps at work and calculate
   - data/format rules and edge cases are defined
   - acceptance criteria are testable
   - unresolved ambiguities have been clarified with the user
-
-
-- no cache busting mechanisms

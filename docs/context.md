@@ -5,8 +5,7 @@
 - Use `docs/requests.md` to capture any new specifications mentioned during chat and keep `docs/architecture.md` in sync with decisions.
 
 ## Prompt log
-- 2026-02-14 to 2026-02-15 – Core app behavior and mobile UX were consolidated in `timestamp.php`: toggle check-in/out POST flow, day-editor persistence, missing-weekday add flow, bottom date-picker entry flow, compact-time parsing, edit-window enforcement, and overlap-hint validation behavior.
-- 2026-02-14 to 2026-02-15 – Platform packaging and UI scaffolding were stabilized: externalized `timestamp.css`/`timestamp.js`, maintained PWA/icon metadata, and aligned example/snapshot artifacts with the production layout constraints.
-- 2026-02-15 – Backend data access was migrated from `SQLite3` APIs to PDO (`sqlite:`), including shared fetch helpers and regression/lint verification.
-- 2026-02-15 – In-code documentation was normalized (PHPDoc coverage, formatting examples), plus redirect intent around POST handlers was clarified.
-- 2026-02-15 – Output escaping was centralized by introducing `e(string): string` in `timestamp.php` and replacing template-wide direct `htmlspecialchars(...)` calls; regression checks passed after the refactor.
+- 2026-02-14 to 2026-02-15 – Built and stabilized the production `timestamp.php` flow: PDO-backed storage, check-in/check-out POST handling, day-editor save/delete behavior, compact time parsing, break-rule handling, missing-weekday add flow, and date-picker constrained to the last eight weeks.
+- 2026-02-14 to 2026-02-15 – Consolidated front-end and platform packaging: moved assets to `timestamp.css`/`timestamp.js`, kept mobile-first interaction patterns, and maintained icon/manifest/PWA metadata plus regression coverage.
+- 2026-02-15 – Normalized maintainability details: standardized PHPDoc coverage, clarified POST redirect intent, and centralized HTML escaping in `timestamp.php` via `e(string): string`.
+- 2026-02-15 – Completed `new specs` acceptance for cache-busting scope (option 2): no cache-busting mechanisms for `timestamp.css` and `timestamp.js`; promoted in `docs/design.md` and synchronized in `docs/architecture.md` and `docs/requests.md`.

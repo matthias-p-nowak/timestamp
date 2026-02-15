@@ -5,6 +5,7 @@
 - Use `docs/todo.md` for actionable backlog items.
 
 ## Historical requests
+- 2026-02-15 – Accepted and promoted new spec (option 2 scope): disable cache-busting mechanisms for `timestamp.css` and `timestamp.js` only.
 - 2026-02-14 – Established and iterated the mobile sample workflow in `examples/mobile.html`, including split-shift examples, row-triggered modal editing, unlimited pairs, and a footer version-stamp preview; snapshot workflow was established with dated versions under `examples/snapshots/`.
 - 2026-02-14 – Built `timestamp.php` into a working SQLite-backed app with schema initialization, check-in/check-out POST toggling, 8-week rendering, persisted day editing, and full-page reload interaction model.
 - 2026-02-14 – Standardized edit/save behavior: delete row on both-empty values, compact time parsing (`745`, `1712`), and client-side validation with blocking save plus inline error/highlight feedback.
