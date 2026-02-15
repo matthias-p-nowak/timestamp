@@ -2,8 +2,12 @@
 
 ## Application landscape
 - Single-page PHP entrypoint (`timestamp.php`) now exists as a real mobile-focused scaffold and reuses the established `examples/mobile.html` visual/interaction patterns.
+- Front-end presentation and behavior assets are now split into dedicated static files (`timestamp.css`, `timestamp.js`) loaded by `timestamp.php` instead of inline blocks.
+- Client-side script organization in `timestamp.js` now centralizes selectors, UI text, and behavior constants in one top-level `UI_CONFIG` object to simplify future maintenance.
 - Authentication occurs at the web server layer via `.htaccess` protections; no additional user accounts exist beyond the single authorized user.
 - `timestamp.php` now initializes and reads SQLite data from `timestamp.db`, including first-run schema creation.
+- Storage engine remains SQLite, and database access is now implemented via PDO (`sqlite:` DSN, exception mode, associative fetch mode).
+- Core backend helpers and request handlers in `timestamp.php` now maintain explicit PHPDoc comments to keep function intent and validation behavior auditable in-code.
 - Header check-in/check-out control now performs real POST toggle actions: check-in inserts an open row and check-out closes the latest open row, followed by full-page reload.
 - Day editor modal now submits persisted edits: `save-day` POST replaces all entries for the selected date in `time_entries` with submitted pairs.
 

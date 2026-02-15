@@ -1,0 +1,320 @@
+:root {
+  font-family: "Source Sans Pro", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  color: #111;
+  background: #f4f4f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 1rem;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: linear-gradient(180deg, #f4f4f6 0%, #e9edef 100%);
+}
+
+.device-frame {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
+  padding-bottom: 1rem;
+  overflow: hidden;
+}
+
+header {
+  padding: 1rem 1.25rem;
+  background: #1d7a0a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+header form {
+  margin: 0;
+}
+
+header button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.9rem;
+  color: #183812;
+  background: #08f700;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(18, 28, 56, 0.15);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1rem 1.25rem;
+}
+
+.week-card {
+  background: #f9fbff;
+  border-radius: 18px;
+  padding: 0.95rem 1rem 1rem;
+  border: 1px solid rgba(18, 28, 56, 0.08);
+}
+
+.week-heading {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #3d4f71;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.day-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1fr;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid rgba(18, 28, 56, 0.08);
+  font-size: 0.9rem;
+  gap: 0.35rem;
+  align-items: center;
+  cursor: pointer;
+}
+
+.day-row:last-child {
+  border-bottom: none;
+}
+
+.day-row:hover {
+  background: rgba(29, 122, 10, 0.04);
+}
+
+.day-row:focus-visible {
+  outline: 2px solid #1d7a0a;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.weekday {
+  font-weight: 600;
+  color: #1f2c45;
+}
+
+.times {
+  color: #4a5770;
+}
+
+.time-pairs {
+  display: grid;
+  justify-items: start;
+  gap: 0.15rem;
+}
+
+.time-pair {
+  white-space: nowrap;
+}
+
+.totals {
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  color: #0c7b3a;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.missing-days {
+  margin-top: 0.55rem;
+}
+
+.missing-days-label {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #5c6575;
+  margin-bottom: 0.35rem;
+}
+
+.missing-days-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.missing-day-btn {
+  border: 1px solid rgba(29, 122, 10, 0.4);
+  border-radius: 999px;
+  background: #eff8ef;
+  color: #1f2c45;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.24rem 0.56rem;
+}
+
+.missing-day-btn:focus-visible {
+  outline: 2px solid #1d7a0a;
+  outline-offset: 1px;
+}
+
+.editor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 18, 27, 0.55);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.8rem;
+  z-index: 50;
+}
+
+.editor-overlay.is-open {
+  display: flex;
+}
+
+.editor-modal {
+  width: min(420px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 22px 45px rgba(10, 15, 24, 0.35);
+  padding: 1rem;
+}
+
+.pair-grid {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.pair-input {
+  width: 100%;
+  border: 1px solid #d4dce8;
+  border-radius: 9px;
+  padding: 0.42rem 0.52rem;
+  font-size: 0.86rem;
+  color: #1f2c45;
+}
+
+.pair-input.is-invalid {
+  border-color: #c62828;
+  background: #fff3f2;
+}
+
+.editor-errors {
+  margin-top: 0.6rem;
+  color: #b42318;
+  font-size: 0.76rem;
+  min-height: 1.1rem;
+}
+
+.editor-hint {
+  margin-top: 0.35rem;
+  color: #666d78;
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.editor-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 0.65rem;
+}
+
+.add-pair-btn {
+  border: none;
+  border-radius: 999px;
+  background: #e8eef8;
+  color: #1f2c45;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.42rem 0.85rem;
+}
+
+.editor-footer {
+  margin-top: 0.85rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.95rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.modal-btn-cancel {
+  background: #edf1f8;
+  color: #1f2c45;
+}
+
+.modal-btn-save {
+  background: #1f8a0a;
+  color: #fff;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: #e1ffeb;
+  color: #03a125;
+  font-size: 0.75rem;
+}
+
+.version-stamp {
+  margin: 0.75rem 0.25rem 0;
+  text-align: center;
+  color: #8a9099;
+  font-size: 0.66rem;
+  letter-spacing: 0.03em;
+}
+
+.footer-tools {
+  margin-top: 0.3rem;
+  display: flex;
+  justify-content: center;
+}
+
+.calendar-add-btn {
+  border: 1px solid rgba(29, 122, 10, 0.35);
+  border-radius: 999px;
+  background: #eff8ef;
+  color: #1f2c45;
+  padding: 0.28rem 0.72rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  border: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}

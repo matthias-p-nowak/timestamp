@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DB_PATH="$ROOT_DIR/timestamp.db"
 PHP_FILE="$ROOT_DIR/timestamp.php"
+JS_FILE="$ROOT_DIR/timestamp.js"
 
 restore_db() {
   if [[ -n "${DB_BACKUP_PATH:-}" && -f "${DB_BACKUP_PATH:-}" ]]; then
@@ -88,20 +89,21 @@ break_values="$(php -r "ob_start(); include '$PHP_FILE'; ob_end_clean(); echo br
 assert_eq "$break_values" "0 30" "break rule partial vs full coverage"
 
 echo "Test 5/7: modal overlap hint visibility rule (source check)"
-grep -q "inParsed.totalMinutes < BREAK_END_MINUTES && outParsed.totalMinutes > BREAK_START_MINUTES" "$PHP_FILE"
-grep -q "breakHint.hidden = !hasOverlapWithBreakWindow;" "$PHP_FILE"
+grep -q "inParsed.totalMinutes < BREAK_END_MINUTES && outParsed.totalMinutes > BREAK_START_MINUTES" "$JS_FILE"
+grep -q "breakHint.hidden = !hasOverlapWithBreakWindow;" "$JS_FILE"
 grep -q "Break is counted only when the full 11:30-12:00 window is covered." "$PHP_FILE"
 
 echo "Test 6/7: missing-weekday add-entry wiring (source check)"
 grep -q "missing_days" "$PHP_FILE"
 grep -q "class=\"missing-day-btn\"" "$PHP_FILE"
-grep -q "querySelectorAll(\".missing-day-btn\")" "$PHP_FILE"
+grep -q "missingDayButtons: \".missing-day-btn\"" "$JS_FILE"
+grep -q "querySelectorAll(UI_CONFIG.selectors.missingDayButtons)" "$JS_FILE"
 
 echo "Test 7/7: date picker range enforcement (server + source check)"
 run_post "['action'=>'save-day','day_date'=>'${FUTURE_DAY}','pair_in'=>['09:00'],'pair_out'=>['10:00']]"
 assert_eq "$(query_scalar "SELECT COUNT(*) FROM time_entries WHERE date(check_in_at)='${FUTURE_DAY}'")" "0" "future date rejected by backend"
 grep -q "id=\"calendarDateInput\"" "$PHP_FILE"
 grep -q "id=\"calendarAddBtn\"" "$PHP_FILE"
-grep -q "setDatePickerRangeToLast8Weeks" "$PHP_FILE"
+grep -q "setDatePickerRangeToLast8Weeks" "$JS_FILE"
 
 echo "PASS: all regression checks passed."

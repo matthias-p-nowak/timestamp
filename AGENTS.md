@@ -24,6 +24,9 @@ name | purpose
 
 # Preferences
 - Prefer simple solutions over theoretically elegant ones.
+- Database access via PDO
+- Doc comments or doc string where applicable
+    - with an example if the documentation is ambigious
 
 # Environment
 - Code files are edited in VSCodium; debugging happens in VSCodium.

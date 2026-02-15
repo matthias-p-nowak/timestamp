@@ -77,3 +77,5 @@ This application records check-in and check-out timestamps at work and calculate
   - acceptance criteria are testable
   - unresolved ambiguities have been clarified with the user
 
+
+- no cache busting mechanisms

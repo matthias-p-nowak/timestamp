@@ -7,12 +7,27 @@ const BREAK_START_MINUTES = 11 * 60 + 30;
 const BREAK_END_MINUTES = 12 * 60;
 const WEEKS_WINDOW = 8;
 
+/**
+ * Converts a time string in the format HH:mm to minutes from midnight.
+ *
+ * @param string $time Time string in the format HH:mm.
+ * @return int Minutes from midnight.
+ */
 function minutesFromTimeString(string $time): int
 {
     [$hours, $minutes] = array_map('intval', explode(':', $time));
     return $hours * 60 + $minutes;
 }
 
+/**
+ * Calculates the number of break minutes between a check-in and check-out time.
+ *
+ * A break is counted only when the full 11:30-12:00 window is covered.
+ *
+ * @param int $inMinutes Minutes from midnight for the check-in time.
+ * @param int $outMinutes Minutes from midnight for the check-out time.
+ * @return int Number of break minutes.
+ */
 function breakMinutesForPair(int $inMinutes, int $outMinutes): int
 {
     if ($inMinutes <= BREAK_START_MINUTES && $outMinutes >= BREAK_END_MINUTES) {
@@ -21,11 +36,32 @@ function breakMinutesForPair(int $inMinutes, int $outMinutes): int
     return 0;
 }
 
+/**
+ * Formats minutes as decimal hours with two digits after the decimal point.
+ *
+ * Examples:
+ * - 60 minutes is formatted as "1.00"
+ * - 90 minutes is formatted as "1.50"
+ *
+ * @param int $minutes Number of minutes to format.
+ * @return string Decimal hour value using a dot separator.
+ */
 function formatHoursFromMinutes(int $minutes): string
 {
     return number_format($minutes / 60, 2, '.', '');
 }
 
+/**
+ * Builds a compact display range for one ISO week.
+ *
+ * Examples:
+ * - 2026-02-09 to 2026-02-15 => "Feb 9-15"
+ * - 2026-03-30 to 2026-04-05 => "Mar 30-Apr 5"
+ *
+ * @param DateTimeImmutable $monday Week start date.
+ * @param DateTimeImmutable $sunday Week end date.
+ * @return string Week range label.
+ */
 function formatWeekRange(DateTimeImmutable $monday, DateTimeImmutable $sunday): string
 {
     $left = $monday->format('M j');
@@ -36,7 +72,13 @@ function formatWeekRange(DateTimeImmutable $monday, DateTimeImmutable $sunday): 
     return $left . '-' . $right;
 }
 
-function initializeSchema(SQLite3 $db): void
+/**
+ * Ensures required SQLite schema elements exist.
+ *
+ * @param PDO $db Database connection.
+ * @return void
+ */
+function initializeSchema(PDO $db): void
 {
     $db->exec(
         'CREATE TABLE IF NOT EXISTS time_entries (
@@ -49,43 +91,39 @@ function initializeSchema(SQLite3 $db): void
     $db->exec('CREATE INDEX IF NOT EXISTS idx_time_entries_check_in_at ON time_entries(check_in_at)');
 }
 
-function findOpenEntry(SQLite3 $db): ?array
+/**
+ * Fetches all rows from an executed PDO statement as associative arrays.
+ *
+ * @param PDOStatement $statement Executed statement.
+ * @return array<int, array<string, mixed>> Result rows.
+ */
+function fetchAllAssoc(PDOStatement $statement): array
 {
-    $result = $db->query(
-        'SELECT id, check_in_at
-         FROM time_entries
-         WHERE check_out_at IS NULL
-         ORDER BY check_in_at DESC
-         LIMIT 1'
-    );
-
-    if ($result === false) {
-        return null;
+    $rows = [];
+    while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+        $rows[] = $row;
     }
-
-    $row = $result->fetchArray(SQLITE3_ASSOC);
-    return $row !== false ? $row : null;
+    return $rows;
 }
 
-function enforceSingleOpenEntry(SQLite3 $db): ?array
+/**
+ * Keeps only one open entry by auto-closing older open rows if needed.
+ *
+ * The most recent open row is kept. Older open rows are closed at the later
+ * of their own check-in time or the keeper check-in time.
+ *
+ * @param PDO $db Database connection.
+ * @return array<string, mixed>|null Remaining open row or null when none exists.
+ */
+function enforceSingleOpenEntry(PDO $db): ?array
 {
-    $result = $db->query(
+    $statement = $db->query(
         'SELECT id, check_in_at
          FROM time_entries
          WHERE check_out_at IS NULL
          ORDER BY check_in_at DESC, id DESC'
     );
-    if ($result === false) {
-        return null;
-    }
-
-    $openRows = [];
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-        if ($row === false) {
-            break;
-        }
-        $openRows[] = $row;
-    }
+    $openRows = $statement === false ? [] : fetchAllAssoc($statement);
 
     if (count($openRows) === 0) {
         return null;
@@ -105,10 +143,10 @@ function enforceSingleOpenEntry(SQLite3 $db): ?array
             $rowCheckIn = (string) $row['check_in_at'];
             $closeAt = strcmp($keeperCheckIn, $rowCheckIn) >= 0 ? $keeperCheckIn : $rowCheckIn;
 
-            $updateStatement->bindValue(':check_out_at', $closeAt, SQLITE3_TEXT);
-            $updateStatement->bindValue(':id', (int) $row['id'], SQLITE3_INTEGER);
+            $updateStatement->bindValue(':check_out_at', $closeAt, PDO::PARAM_STR);
+            $updateStatement->bindValue(':id', (int) $row['id'], PDO::PARAM_INT);
             $updateStatement->execute();
-            $updateStatement->clear();
+            $updateStatement->closeCursor();
         }
         $db->exec('COMMIT');
     } catch (Throwable $error) {
@@ -119,6 +157,12 @@ function enforceSingleOpenEntry(SQLite3 $db): ?array
     return $keeper;
 }
 
+/**
+ * Validates a date string in YYYY-MM-DD format.
+ *
+ * @param string $date Candidate date.
+ * @return string|null Normalized date or null when invalid.
+ */
 function normalizeDate(string $date): ?string
 {
     $candidate = DateTimeImmutable::createFromFormat('Y-m-d', $date);
@@ -128,6 +172,12 @@ function normalizeDate(string $date): ?string
     return $date;
 }
 
+/**
+ * Validates a strict HH:mm time string.
+ *
+ * @param string $time Candidate time.
+ * @return string|null Normalized time or null when invalid.
+ */
 function normalizeTime(string $time): ?string
 {
     if (!preg_match('/^\d{2}:\d{2}$/', $time)) {
@@ -142,6 +192,14 @@ function normalizeTime(string $time): ?string
     return sprintf('%02d:%02d', $hours, $minutes);
 }
 
+/**
+ * Normalizes editable time input from the modal.
+ *
+ * Accepts HH:mm and compact 3-4 digit values (for example 745, 1712).
+ *
+ * @param string $time Raw input string.
+ * @return string|null Normalized HH:mm value or null when invalid/empty.
+ */
 function normalizeEditableTime(string $time): ?string
 {
     $raw = trim($time);
@@ -171,19 +229,26 @@ function normalizeEditableTime(string $time): ?string
     return sprintf('%02d:%02d', $hours, $minutes);
 }
 
-function handleToggleAction(SQLite3 $db, DateTimeImmutable $now): void
+/**
+ * Handles header toggle action: check in when closed, check out when open.
+ *
+ * @param PDO $db Database connection.
+ * @param DateTimeImmutable $now Current request timestamp.
+ * @return void
+ */
+function handleToggleAction(PDO $db, DateTimeImmutable $now): void
 {
     $nowSql = $now->format('Y-m-d H:i:s');
     $openEntry = enforceSingleOpenEntry($db);
 
     if ($openEntry === null) {
         $statement = $db->prepare('INSERT INTO time_entries (check_in_at, check_out_at) VALUES (:check_in_at, NULL)');
-        $statement->bindValue(':check_in_at', $nowSql, SQLITE3_TEXT);
+        $statement->bindValue(':check_in_at', $nowSql, PDO::PARAM_STR);
         $statement->execute();
     } else {
         $statement = $db->prepare('UPDATE time_entries SET check_out_at = :check_out_at WHERE id = :id');
-        $statement->bindValue(':check_out_at', $nowSql, SQLITE3_TEXT);
-        $statement->bindValue(':id', (int) $openEntry['id'], SQLITE3_INTEGER);
+        $statement->bindValue(':check_out_at', $nowSql, PDO::PARAM_STR);
+        $statement->bindValue(':id', (int) $openEntry['id'], PDO::PARAM_INT);
         $statement->execute();
     }
 
@@ -191,6 +256,13 @@ function handleToggleAction(SQLite3 $db, DateTimeImmutable $now): void
     exit;
 }
 
+/**
+ * Checks whether a date is editable inside the configured trailing week window.
+ *
+ * @param DateTimeImmutable $now Current request timestamp.
+ * @param string $date Candidate date in YYYY-MM-DD.
+ * @return bool True when date is inside the edit window.
+ */
 function isDateWithinEditWindow(DateTimeImmutable $now, string $date): bool
 {
     $candidate = DateTimeImmutable::createFromFormat('Y-m-d', $date);
@@ -208,7 +280,17 @@ function isDateWithinEditWindow(DateTimeImmutable $now, string $date): bool
     return $candidateDay >= $windowStart && $candidateDay <= $windowEnd;
 }
 
-function handleSaveDayAction(SQLite3 $db, DateTimeImmutable $now): void
+/**
+ * Handles day-editor save requests.
+ *
+ * Replaces all rows for the posted date with validated pairs and then
+ * re-applies single-open-entry safety.
+ *
+ * @param PDO $db Database connection.
+ * @param DateTimeImmutable $now Current request timestamp.
+ * @return void
+ */
+function handleSaveDayAction(PDO $db, DateTimeImmutable $now): void
 {
     $date = isset($_POST['day_date']) ? trim((string) $_POST['day_date']) : '';
     $normalizedDate = normalizeDate($date);
@@ -256,20 +338,21 @@ function handleSaveDayAction(SQLite3 $db, DateTimeImmutable $now): void
     $db->exec('BEGIN IMMEDIATE TRANSACTION');
     try {
         $deleteStatement = $db->prepare('DELETE FROM time_entries WHERE date(check_in_at) = :day_date');
-        $deleteStatement->bindValue(':day_date', $normalizedDate, SQLITE3_TEXT);
+        $deleteStatement->bindValue(':day_date', $normalizedDate, PDO::PARAM_STR);
         $deleteStatement->execute();
+        $deleteStatement->closeCursor();
 
         if (count($normalizedPairs) > 0) {
             $insertStatement = $db->prepare('INSERT INTO time_entries (check_in_at, check_out_at) VALUES (:check_in_at, :check_out_at)');
             foreach ($normalizedPairs as $pair) {
-                $insertStatement->bindValue(':check_in_at', $normalizedDate . ' ' . $pair['in'] . ':00', SQLITE3_TEXT);
+                $insertStatement->bindValue(':check_in_at', $normalizedDate . ' ' . $pair['in'] . ':00', PDO::PARAM_STR);
                 if ($pair['out'] === null) {
-                    $insertStatement->bindValue(':check_out_at', null, SQLITE3_NULL);
+                    $insertStatement->bindValue(':check_out_at', null, PDO::PARAM_NULL);
                 } else {
-                    $insertStatement->bindValue(':check_out_at', $normalizedDate . ' ' . $pair['out'] . ':00', SQLITE3_TEXT);
+                    $insertStatement->bindValue(':check_out_at', $normalizedDate . ' ' . $pair['out'] . ':00', PDO::PARAM_STR);
                 }
                 $insertStatement->execute();
-                $insertStatement->clear();
+                $insertStatement->closeCursor();
             }
         }
 
@@ -285,7 +368,14 @@ function handleSaveDayAction(SQLite3 $db, DateTimeImmutable $now): void
     exit;
 }
 
-function handlePostActions(SQLite3 $db, DateTimeImmutable $now): void
+/**
+ * Routes supported POST actions.
+ *
+ * @param PDO $db Database connection.
+ * @param DateTimeImmutable $now Current request timestamp.
+ * @return void
+ */
+function handlePostActions(PDO $db, DateTimeImmutable $now): void
 {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
         return;
@@ -300,7 +390,14 @@ function handlePostActions(SQLite3 $db, DateTimeImmutable $now): void
     }
 }
 
-function loadWeeks(SQLite3 $db, DateTimeImmutable $now): array
+/**
+ * Loads and shapes week/day view data for rendering.
+ *
+ * @param PDO $db Database connection.
+ * @param DateTimeImmutable $now Current request timestamp.
+ * @return array<int, array<string, mixed>> Week list with populated and missing days.
+ */
+function loadWeeks(PDO $db, DateTimeImmutable $now): array
 {
     $startOfThisWeek = $now->modify('monday this week')->setTime(0, 0, 0);
     $windowStart = $startOfThisWeek->modify('-' . (WEEKS_WINDOW - 1) . ' weeks');
@@ -311,11 +408,11 @@ function loadWeeks(SQLite3 $db, DateTimeImmutable $now): array
          WHERE check_in_at >= :window_start
          ORDER BY check_in_at ASC'
     );
-    $statement->bindValue(':window_start', $windowStart->format('Y-m-d H:i:s'), SQLITE3_TEXT);
-    $queryResult = $statement->execute();
+    $statement->bindValue(':window_start', $windowStart->format('Y-m-d H:i:s'), PDO::PARAM_STR);
+    $statement->execute();
 
     $weeks = [];
-    while ($row = $queryResult->fetchArray(SQLITE3_ASSOC)) {
+    foreach (fetchAllAssoc($statement) as $row) {
         $checkInAt = new DateTimeImmutable($row['check_in_at']);
         $checkOutAt = $row['check_out_at'] !== null ? new DateTimeImmutable($row['check_out_at']) : null;
 
@@ -408,8 +505,9 @@ function loadWeeks(SQLite3 $db, DateTimeImmutable $now): array
 }
 
 $now = new DateTimeImmutable('now');
-$db = new SQLite3(__DIR__ . '/timestamp.db');
-$db->enableExceptions(true);
+$db = new PDO('sqlite:' . __DIR__ . '/timestamp.db');
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 initializeSchema($db);
 handlePostActions($db, $now);
 
@@ -443,328 +541,7 @@ $weeks = loadWeeks($db, $now);
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link rel="icon" href="favicon-32x32.png" type="image/png" sizes="32x32" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180" />
-    <style>
-      :root {
-        font-family: "Source Sans Pro", system-ui, -apple-system, BlinkMacSystemFont,
-          "Segoe UI", sans-serif;
-        color: #111;
-        background: #f4f4f6;
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        padding: 1rem;
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        background: linear-gradient(180deg, #f4f4f6 0%, #e9edef 100%);
-      }
-
-      .device-frame {
-        width: min(420px, 100%);
-        background: #fff;
-        border-radius: 32px;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.2);
-        padding-bottom: 1rem;
-        overflow: hidden;
-      }
-
-      header {
-        padding: 1rem 1.25rem;
-        background: #1d7a0a;
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        position: sticky;
-        top: 0;
-      }
-
-      header h1 {
-        margin: 0;
-        font-size: 1rem;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-      }
-
-      header form {
-        margin: 0;
-      }
-
-      header button {
-        border: none;
-        border-radius: 999px;
-        padding: 0.65rem 1.5rem;
-        font-size: 0.9rem;
-        color: #183812;
-        background: #08f700;
-        font-weight: 600;
-        box-shadow: inset 0 0 0 1px rgba(18, 28, 56, 0.15);
-      }
-
-      main {
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-        padding: 1rem 1rem 1.25rem;
-      }
-
-      .week-card {
-        background: #f9fbff;
-        border-radius: 18px;
-        padding: 0.95rem 1rem 1rem;
-        border: 1px solid rgba(18, 28, 56, 0.08);
-      }
-
-      .week-heading {
-        font-size: 0.85rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: #3d4f71;
-        margin-bottom: 0.5rem;
-        letter-spacing: 0.05em;
-      }
-
-      .day-row {
-        display: grid;
-        grid-template-columns: 1.5fr 1.5fr 1fr;
-        padding: 0.45rem 0;
-        border-bottom: 1px solid rgba(18, 28, 56, 0.08);
-        font-size: 0.9rem;
-        gap: 0.35rem;
-        align-items: center;
-        cursor: pointer;
-      }
-
-      .day-row:last-child {
-        border-bottom: none;
-      }
-
-      .day-row:hover {
-        background: rgba(29, 122, 10, 0.04);
-      }
-
-      .day-row:focus-visible {
-        outline: 2px solid #1d7a0a;
-        outline-offset: 2px;
-        border-radius: 6px;
-      }
-
-      .weekday {
-        font-weight: 600;
-        color: #1f2c45;
-      }
-
-      .times {
-        color: #4a5770;
-      }
-
-      .time-pairs {
-        display: grid;
-        justify-items: start;
-        gap: 0.15rem;
-      }
-
-      .time-pair {
-        white-space: nowrap;
-      }
-
-      .totals {
-        font-family: "JetBrains Mono", "Courier New", monospace;
-        color: #0c7b3a;
-        text-align: right;
-        white-space: nowrap;
-      }
-
-      .missing-days {
-        margin-top: 0.55rem;
-      }
-
-      .missing-days-label {
-        display: block;
-        font-size: 0.74rem;
-        font-weight: 600;
-        color: #5c6575;
-        margin-bottom: 0.35rem;
-      }
-
-      .missing-days-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-      }
-
-      .missing-day-btn {
-        border: 1px solid rgba(29, 122, 10, 0.4);
-        border-radius: 999px;
-        background: #eff8ef;
-        color: #1f2c45;
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 0.24rem 0.56rem;
-      }
-
-      .missing-day-btn:focus-visible {
-        outline: 2px solid #1d7a0a;
-        outline-offset: 1px;
-      }
-
-      .editor-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(12, 18, 27, 0.55);
-        display: none;
-        align-items: flex-end;
-        justify-content: center;
-        padding: 0.8rem;
-        z-index: 50;
-      }
-
-      .editor-overlay.is-open {
-        display: flex;
-      }
-
-      .editor-modal {
-        width: min(420px, 100%);
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 22px 45px rgba(10, 15, 24, 0.35);
-        padding: 1rem;
-      }
-
-      .pair-grid {
-        display: grid;
-        gap: 0.45rem;
-      }
-
-      .pair-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.45rem;
-      }
-
-      .pair-input {
-        width: 100%;
-        border: 1px solid #d4dce8;
-        border-radius: 9px;
-        padding: 0.42rem 0.52rem;
-        font-size: 0.86rem;
-        color: #1f2c45;
-      }
-
-      .pair-input.is-invalid {
-        border-color: #c62828;
-        background: #fff3f2;
-      }
-
-      .editor-errors {
-        margin-top: 0.6rem;
-        color: #b42318;
-        font-size: 0.76rem;
-        min-height: 1.1rem;
-      }
-
-      .editor-hint {
-        margin-top: 0.35rem;
-        color: #666d78;
-        font-size: 0.72rem;
-        line-height: 1.3;
-      }
-
-      .editor-actions {
-        display: flex;
-        justify-content: flex-start;
-        margin-top: 0.65rem;
-      }
-
-      .add-pair-btn {
-        border: none;
-        border-radius: 999px;
-        background: #e8eef8;
-        color: #1f2c45;
-        font-size: 0.8rem;
-        font-weight: 600;
-        padding: 0.42rem 0.85rem;
-      }
-
-      .editor-footer {
-        margin-top: 0.85rem;
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.45rem;
-      }
-
-      .modal-btn {
-        border: none;
-        border-radius: 999px;
-        padding: 0.5rem 0.95rem;
-        font-size: 0.82rem;
-        font-weight: 600;
-      }
-
-      .modal-btn-cancel {
-        background: #edf1f8;
-        color: #1f2c45;
-      }
-
-      .modal-btn-save {
-        background: #1f8a0a;
-        color: #fff;
-      }
-
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.35rem;
-        padding: 0.2rem 0.65rem;
-        border-radius: 999px;
-        background: #e1ffeb;
-        color: #03a125;
-        font-size: 0.75rem;
-      }
-
-      .version-stamp {
-        margin: 0.75rem 0.25rem 0;
-        text-align: center;
-        color: #8a9099;
-        font-size: 0.66rem;
-        letter-spacing: 0.03em;
-      }
-
-      .footer-tools {
-        margin-top: 0.3rem;
-        display: flex;
-        justify-content: center;
-      }
-
-      .calendar-add-btn {
-        border: 1px solid rgba(29, 122, 10, 0.35);
-        border-radius: 999px;
-        background: #eff8ef;
-        color: #1f2c45;
-        padding: 0.28rem 0.72rem;
-        font-size: 0.74rem;
-        font-weight: 600;
-      }
-
-      .visually-hidden {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        margin: -1px;
-        border: 0;
-        padding: 0;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-      }
-    </style>
+    <link rel="stylesheet" href="timestamp.css" />
   </head>
   <body>
     <div class="device-frame" role="main">
@@ -878,290 +655,6 @@ $weeks = loadWeeks($db, $now);
       </form>
     </div>
 
-    <script>
-      const overlay = document.getElementById("dayEditor");
-      const pairGrid = document.getElementById("pairGrid");
-      const addPairBtn = document.getElementById("addPairBtn");
-      const cancelButton = document.getElementById("editorCancel");
-      const saveButton = document.getElementById("editorSave");
-      const dayDateInput = document.getElementById("editorDayDate");
-      const editorForm = overlay.querySelector("form");
-      const editorErrors = document.getElementById("editorErrors");
-      const breakHint = document.getElementById("breakHint");
-      const calendarDateInput = document.getElementById("calendarDateInput");
-      const calendarAddBtn = document.getElementById("calendarAddBtn");
-      const useNativeTimeInput = typeof window.matchMedia === "function" &&
-        window.matchMedia("(pointer: coarse)").matches;
-      const BREAK_START_MINUTES = (11 * 60) + 30;
-      const BREAK_END_MINUTES = 12 * 60;
-
-      function parseCompactTime(value) {
-        const raw = value.trim();
-        if (raw === "") {
-          return null;
-        }
-
-        const fullMatch = raw.match(/^(\d{2}):(\d{2})$/);
-        if (fullMatch) {
-          const hours = Number(fullMatch[1]);
-          const minutes = Number(fullMatch[2]);
-          if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-            return { formatted: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`, totalMinutes: (hours * 60) + minutes };
-          }
-          return null;
-        }
-
-        if (!/^\d{3,4}$/.test(raw)) {
-          return null;
-        }
-
-        const normalized = raw.length === 3 ? `0${raw}` : raw;
-        const hours = Number(normalized.slice(0, 2));
-        const minutes = Number(normalized.slice(2, 4));
-        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-          return null;
-        }
-
-        return { formatted: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`, totalMinutes: (hours * 60) + minutes };
-      }
-
-      function addPairInputRow(inValue, outValue) {
-        const row = document.createElement("div");
-        row.className = "pair-row";
-
-        const inInput = document.createElement("input");
-        inInput.className = "pair-input";
-        if (useNativeTimeInput) {
-          inInput.type = "time";
-          inInput.step = "60";
-        } else {
-          inInput.type = "text";
-          inInput.placeholder = "Check in";
-        }
-        inInput.name = "pair_in[]";
-        inInput.value = inValue || "";
-
-        const outInput = document.createElement("input");
-        outInput.className = "pair-input";
-        if (useNativeTimeInput) {
-          outInput.type = "time";
-          outInput.step = "60";
-        } else {
-          outInput.type = "text";
-          outInput.placeholder = "Check out";
-        }
-        outInput.name = "pair_out[]";
-        outInput.value = outValue || "";
-
-        inInput.addEventListener("input", validateEditorRows);
-        outInput.addEventListener("input", validateEditorRows);
-
-        row.appendChild(inInput);
-        row.appendChild(outInput);
-        pairGrid.appendChild(row);
-      }
-
-      function setInputValidity(input, isValid) {
-        input.classList.toggle("is-invalid", !isValid);
-      }
-
-      function validateEditorRows() {
-        const rows = Array.from(pairGrid.querySelectorAll(".pair-row"));
-        let firstError = "";
-        let hasError = false;
-        let hasOverlapWithBreakWindow = false;
-
-        rows.forEach((row) => {
-          const inInput = row.querySelector('input[name="pair_in[]"]');
-          const outInput = row.querySelector('input[name="pair_out[]"]');
-          const inValue = inInput.value.trim();
-          const outValue = outInput.value.trim();
-          let rowValid = true;
-
-          if (inValue === "" && outValue === "") {
-            setInputValidity(inInput, true);
-            setInputValidity(outInput, true);
-            return;
-          }
-
-          const inParsed = parseCompactTime(inValue);
-          const outParsed = outValue === "" ? null : parseCompactTime(outValue);
-
-          if (inValue === "") {
-            rowValid = false;
-            if (!firstError) {
-              firstError = "Each non-empty row needs a check-in time.";
-            }
-          } else if (inParsed === null) {
-            rowValid = false;
-            if (!firstError) {
-              firstError = "Use time as HH:mm, 745, or 1712.";
-            }
-          }
-
-          if (outValue !== "" && outParsed === null) {
-            rowValid = false;
-            if (!firstError) {
-              firstError = "Check-out has invalid time format.";
-            }
-          }
-
-          if (inParsed !== null && outParsed !== null && outParsed.totalMinutes < inParsed.totalMinutes) {
-            rowValid = false;
-            if (!firstError) {
-              firstError = "Check-out cannot be earlier than check-in.";
-            }
-          }
-
-          if (rowValid && inParsed !== null && outParsed !== null) {
-            if (inParsed.totalMinutes < BREAK_END_MINUTES && outParsed.totalMinutes > BREAK_START_MINUTES) {
-              hasOverlapWithBreakWindow = true;
-            }
-          }
-
-          setInputValidity(inInput, rowValid || inParsed !== null);
-          setInputValidity(outInput, rowValid || outValue === "" || outParsed !== null);
-
-          if (!rowValid) {
-            hasError = true;
-          }
-        });
-
-        editorErrors.textContent = hasError ? firstError : "";
-        breakHint.hidden = !hasOverlapWithBreakWindow;
-        saveButton.disabled = hasError;
-        saveButton.setAttribute("aria-disabled", hasError ? "true" : "false");
-        return !hasError;
-      }
-
-      function fillModalFromRow(row) {
-        pairGrid.innerHTML = "";
-        const pairs = Array.from(row.querySelectorAll(".time-pair")).map((item) => item.textContent.trim());
-
-        if (pairs.length === 0) {
-          addPairInputRow("", "");
-          return;
-        }
-
-        pairs.forEach((text) => {
-          const split = text.split("-");
-          const inValue = split[0] ? split[0].trim() : "";
-          const outValue = split[1] ? split[1].trim() : "";
-          addPairInputRow(inValue, outValue);
-        });
-      }
-
-      function openModal(row) {
-        fillModalFromRow(row);
-        dayDateInput.value = row.dataset.date || "";
-        overlay.classList.add("is-open");
-        overlay.setAttribute("aria-hidden", "false");
-        validateEditorRows();
-      }
-
-      function openModalForDate(dateValue) {
-        pairGrid.innerHTML = "";
-        addPairInputRow("", "");
-        dayDateInput.value = dateValue;
-        overlay.classList.add("is-open");
-        overlay.setAttribute("aria-hidden", "false");
-        validateEditorRows();
-      }
-
-      function setDatePickerRangeToLast8Weeks() {
-        if (!calendarDateInput) {
-          return;
-        }
-        if (calendarDateInput.min && calendarDateInput.max) {
-          return;
-        }
-
-        const today = new Date();
-        const maxDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const weekDay = (maxDate.getDay() + 6) % 7;
-        const mondayThisWeek = new Date(maxDate);
-        mondayThisWeek.setDate(maxDate.getDate() - weekDay);
-        const minDate = new Date(mondayThisWeek);
-        minDate.setDate(mondayThisWeek.getDate() - ((8 - 1) * 7));
-
-        const toIsoDate = (value) => {
-          const year = value.getFullYear();
-          const month = String(value.getMonth() + 1).padStart(2, "0");
-          const day = String(value.getDate()).padStart(2, "0");
-          return `${year}-${month}-${day}`;
-        };
-
-        calendarDateInput.min = toIsoDate(minDate);
-        calendarDateInput.max = toIsoDate(maxDate);
-      }
-
-      function closeModal() {
-        overlay.classList.remove("is-open");
-        overlay.setAttribute("aria-hidden", "true");
-      }
-
-      document.querySelectorAll(".day-row").forEach((row) => {
-        row.addEventListener("click", () => {
-          openModal(row);
-        });
-
-        row.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            openModal(row);
-          }
-        });
-      });
-
-      document.querySelectorAll(".missing-day-btn").forEach((button) => {
-        button.addEventListener("click", () => {
-          openModal(button);
-        });
-      });
-
-      setDatePickerRangeToLast8Weeks();
-
-      calendarAddBtn.addEventListener("click", () => {
-        if (typeof calendarDateInput.showPicker === "function") {
-          calendarDateInput.showPicker();
-          return;
-        }
-        calendarDateInput.click();
-      });
-
-      calendarDateInput.addEventListener("change", () => {
-        const selectedDate = calendarDateInput.value;
-        if (!selectedDate) {
-          return;
-        }
-        if ((calendarDateInput.min && selectedDate < calendarDateInput.min) ||
-            (calendarDateInput.max && selectedDate > calendarDateInput.max)) {
-          calendarDateInput.value = "";
-          return;
-        }
-
-        openModalForDate(selectedDate);
-        calendarDateInput.value = "";
-      });
-
-      cancelButton.addEventListener("click", closeModal);
-
-      addPairBtn.addEventListener("click", () => {
-        addPairInputRow("", "");
-        validateEditorRows();
-      });
-
-      overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-          closeModal();
-        }
-      });
-
-      editorForm.addEventListener("submit", (event) => {
-        if (!validateEditorRows()) {
-          event.preventDefault();
-        }
-      });
-    </script>
+    <script src="timestamp.js"></script>
   </body>
 </html>
